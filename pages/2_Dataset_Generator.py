@@ -22,6 +22,8 @@ def run_app():
 
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="Dataset Generator", page_icon=":chart_with_upwards_trend:", layout="wide")
+
     if "datasets" not in st.session_state:
         st.session_state.datasets = {}  # Create the datasets dictionary in session_state
 

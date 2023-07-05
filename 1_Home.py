@@ -5,6 +5,8 @@ def run_app():
 
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="Home", page_icon=":house:", layout="wide")
+
     hide_st_style = """
                     <style>
                     #MainMenu {visibility: hidden;}

@@ -4,6 +4,8 @@ def run_app():
     st.title("Linear Programming")
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="Linear Programming", page_icon=":books:", layout="wide")
+
     hide_st_style = """
                     <style>
                     #MainMenu {visibility: hidden;}

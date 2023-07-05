@@ -4,6 +4,8 @@ def run_app():
     st.title("Gamification")
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="Gamification", page_icon=":trophy:", layout="wide")
+
     hide_st_style = """
                     <style>
                     #MainMenu {visibility: hidden;}
