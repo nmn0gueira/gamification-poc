@@ -1,3 +1,14 @@
 import streamlit as st
 
-st.title("Linear Programming")
+def run_app():
+    st.title("Linear Programming")
+
+if __name__ == "__main__":
+    hide_st_style = """
+                    <style>
+                    #MainMenu {visibility: hidden;}
+                    footer {visibility: hidden;}
+                    </style>
+                    """
+    st.markdown(hide_st_style, unsafe_allow_html=True)  # Hide the Streamlit footer and menu button
+    run_app()

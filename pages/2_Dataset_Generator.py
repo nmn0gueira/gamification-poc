@@ -1,7 +1,5 @@
 import streamlit as st
-import pandas as pd
 from packages.dataset_generator.datagen import generate_dataset
-# Import other necessary modules/functions
 
 def run_app():
     st.sidebar.title("Employee Performance Dataset Generator")
@@ -29,5 +27,13 @@ if __name__ == "__main__":
 
     if "selected_dataset" not in st.session_state:
         st.session_state.selected_dataset = None  # Initialize the selected dataset
+
+    hide_st_style = """
+                    <style>
+                    #MainMenu {visibility: hidden;}
+                    footer {visibility: hidden;}
+                    </style>
+                    """
+    st.markdown(hide_st_style, unsafe_allow_html=True)  # Hide the Streamlit footer and menu button
 
     run_app()
