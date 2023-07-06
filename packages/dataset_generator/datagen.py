@@ -2,7 +2,6 @@ import random
 import pandas as pd
 import datetime
 import holidays
-import streamlit as st
 
 
 MIN_UNITS_PROCESSED = 100
