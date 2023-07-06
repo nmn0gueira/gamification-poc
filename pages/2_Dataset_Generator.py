@@ -4,35 +4,50 @@ from packages.dataset_generator.datagen import generate_dataset
 def run_app():
     st.sidebar.title("Employee Performance Dataset Generator")
     
-    if st.session_state.datasets:
-        st.info("Datasets exist. Delete all datasets before changing the number of employees.")
-        st.sidebar.text_input("Number of Employees", value=len(st.session_state.datasets), disabled=True)
+    # Main content
+    with st.container():
+        if st.session_state.datasets:
+            # Datasets exist
+            st.info("Datasets exist. Delete all datasets before changing the number of employees.")
+            st.session_state.disabled = True
 
-    else:
-        number_of_employees = st.sidebar.number_input("Number of Employees", min_value=1, value=100)
+            dataset_names = list(st.session_state.datasets.keys())
+            dataset_to_display = st.selectbox("Select Dataset", dataset_names, index=dataset_names.index(st.session_state.selected_dataset),
+                                              key="dataset_selectbox")
+            st.session_state.selected_dataset = dataset_to_display  # Update the selected dataset
+            st.dataframe(st.session_state.datasets[st.session_state.selected_dataset])
 
-    dataset_name = st.sidebar.text_input("Dataset Name", "Dataset 1")  # User-defined dataset name
+        else:
+            # No datasets available
+            st.info("No datasets available. Please generate a dataset.")
+            st.session_state.disabled = False
 
-    if st.sidebar.button("Generate Dataset"):
-        dataset = generate_dataset(number_of_employees)
-        st.session_state.datasets[dataset_name] = dataset
-        st.session_state.selected_dataset = dataset_name  # Update the selected dataset
+    
+    # Sidebar content
+    with st.sidebar:
+        number_of_employees = st.number_input("Number of Employees", min_value=1, value=100, disabled=st.session_state.disabled)
+        dataset_name = st.text_input("Dataset Name", "Dataset 1")  # User-defined dataset name
 
-    if st.sidebar.button("Delete All Datasets"):  # Handle the click event of the "Delete All Datasets" button
-        if not st.session_state.datasets:
-            st.warning("No datasets to delete.")
-        else:  
-            st.session_state.datasets.clear()  # Clear the datasets dictionary
-            st.session_state.selected_dataset = None  # Reset the selected dataset
+        generate_button = st.button("Generate Dataset")
+        delete_button = st.button("Delete All Datasets")
 
-    if not st.session_state.datasets:
-        st.info("No datasets available. Please generate a dataset.")
-    else:
-        dataset_names = list(st.session_state.datasets.keys())
-        dataset_to_display = st.selectbox("Select Dataset", dataset_names, index=dataset_names.index(st.session_state.selected_dataset),
-                                          key="dataset_selectbox")
-        st.session_state.selected_dataset = dataset_to_display  # Update the selected dataset
-        st.dataframe(st.session_state.datasets[st.session_state.selected_dataset])
+        if delete_button:  # Handle the click event of the "Delete All Datasets" button
+            if not st.session_state.datasets:
+                st.warning("No datasets to delete.")
+            else:  
+                st.session_state.datasets.clear()  # Clear the datasets dictionary
+                st.session_state.selected_dataset = None  # Reset the selected dataset
+                st.success("All datasets deleted successfully.")
+                st.experimental_rerun()  # Rerun the app to update the dataset selectbox
+
+
+        if generate_button:  # Handle the click event of the "Generate Dataset" button
+            dataset = generate_dataset(number_of_employees)
+            st.session_state.datasets[dataset_name] = dataset
+            st.session_state.selected_dataset = dataset_name  # Update the selected dataset
+            st.success("Dataset generated successfully.")
+            st.experimental_rerun()  # Rerun the app to update the dataset selectbox
+
 
 
 if __name__ == "__main__":
@@ -43,7 +58,6 @@ if __name__ == "__main__":
 
     if "selected_dataset" not in st.session_state:
         st.session_state.selected_dataset = None  # Initialize the selected dataset
-
 
     hide_st_style = """
                     <style>
