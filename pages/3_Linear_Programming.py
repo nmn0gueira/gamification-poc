@@ -7,7 +7,6 @@ def run_app():
 
     dataframe = pd.DataFrame(columns=["Person " + str(i+1) for i in range(number_of_employees)])
     capacities = []
-    variables = {}
 
     # Create complete dataframe with unit processing times
     # Load from datasets
@@ -18,7 +17,7 @@ def run_app():
         dataframe.loc[task_name] = unit_processing_times
 
         capacities.append(capacity)
-        variables[task_name] = []
+
     
     dataframe['Capacity'] = capacities
 

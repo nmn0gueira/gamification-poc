@@ -6,7 +6,7 @@ MIN_HOURS_WORKED = 100
 
 def solve_linear_programming(dataframe: pd.DataFrame):
 
-    variables = {}
+    variables = {task_name : [] for task_name in dataframe.index} # Create a dictionary of lists to store the variables
     number_of_employees = len(dataframe.columns) - 1
 
     # Create model
