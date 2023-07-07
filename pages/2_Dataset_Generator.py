@@ -2,7 +2,6 @@ import streamlit as st
 from packages.dataset_generator.datagen import generate_dataset
 
 def run_app():
-    st.sidebar.title("Employee Performance Dataset Generator")
     
     # Main content
     with st.container():
@@ -27,6 +26,8 @@ def run_app():
     
     # Sidebar content
     with st.sidebar:
+        st.header("Generate Dataset")
+
         left_column, right_column = st.columns(2)
 
         with left_column:

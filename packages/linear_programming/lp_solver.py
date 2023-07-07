@@ -57,4 +57,4 @@ def solve_linear_programming(dataframe: pd.DataFrame):
     for v in model.variables():
         print(v.name, "=", v.varValue)
 
-    return {v.name: v.varValue for v in model.variables()}  # Variables and their values
+    return model
