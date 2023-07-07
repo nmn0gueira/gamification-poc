@@ -22,6 +22,8 @@ def run_app():
             st.info("No datasets available. Please generate a dataset.")
             st.session_state.disabled = False
 
+        st.write(st.session_state)
+
     
     # Sidebar content
     with st.sidebar:
