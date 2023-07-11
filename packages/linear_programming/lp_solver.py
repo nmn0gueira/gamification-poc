@@ -3,6 +3,13 @@ from pulp import *
 
 MIN_HOURS_WORKED = 100
 
+class Status:
+    NOT_SOLVED = 0
+    OPTIMAL = 1
+    INFEASIBLE = -1
+    UNBOUNDED = -2
+    UNDEFINED = -3
+
 
 def solve_linear_programming(dataframe: pd.DataFrame):
 
@@ -16,7 +23,7 @@ def solve_linear_programming(dataframe: pd.DataFrame):
     # Create variables
     for key in variables:   # For each task
         for i in range(number_of_employees):    # For each employee
-            variables[key].append(LpVariable("X" + key + str(i+1), lowBound=0, cat="Integer"))   # Create variable
+            variables[key].append(LpVariable("X" + key + str(i+1), lowBound=0, cat=LpInteger))   # Create variable
 
 
     # Define objective
@@ -49,12 +56,14 @@ def solve_linear_programming(dataframe: pd.DataFrame):
         
         model += lpSum(aux_list) >= MIN_HOURS_WORKED # In total, the time spent by an employee must be greater than or equal to the minimum hours worked
 
+
+    # Non-negativity constraints
+    # for key in variables:   # For each task
+    #     for i in range(number_of_employees):    # For each employee
+    #         model += variables[key][i] >= 0 # Each variable must be greater than or equal to zero
+
+
     # Solve model
     model.solve()
-
-
-    # Show solution
-    for v in model.variables():
-        print(v.name, "=", v.varValue)
 
     return model

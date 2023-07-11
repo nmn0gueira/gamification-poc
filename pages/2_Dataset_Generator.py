@@ -7,7 +7,7 @@ def run_app():
     with st.container():
         if st.session_state.datasets:
             # Datasets exist
-            st.info("Datasets exist. Delete all datasets before changing the number of employees.")
+            st.subheader("Available Datasets")
             st.session_state.disabled = True
 
             dataset_names = list(st.session_state.datasets.keys())
@@ -21,8 +21,6 @@ def run_app():
             st.info("No datasets available. Please generate a dataset.")
             st.session_state.disabled = False
 
-        st.write(st.session_state)
-
     
     # Sidebar content
     with st.sidebar:
@@ -31,14 +29,22 @@ def run_app():
         left_column, right_column = st.columns(2)
 
         with left_column:
-            number_of_employees = st.number_input("Number of Employees", min_value=1, value=100, disabled=st.session_state.disabled)
+            number_of_employees = st.number_input("Number of Employees", min_value=1, value=5, disabled=st.session_state.disabled)
         with right_column:
-            capacity = st.number_input("Capacity", min_value=1, value=300)
+            capacity = st.number_input("Capacity", min_value=1, value=500)
 
         dataset_name = st.text_input("Dataset Name", "Dataset 1")  # User-defined dataset name
 
         generate_button = st.button("Generate Dataset")
         delete_button = st.button("Delete All Datasets")
+
+
+        if generate_button:  # Handle the click event of the "Generate Dataset" button
+            dataset = generate_dataset(number_of_employees)
+            st.session_state.datasets[dataset_name] = (dataset, capacity)
+            st.session_state.selected_dataset = dataset_name  # Update the selected dataset
+            st.experimental_rerun()  # Rerun the app to update the dataset selectbox
+
 
         if delete_button:  # Handle the click event of the "Delete All Datasets" button
             if not st.session_state.datasets:
@@ -49,11 +55,7 @@ def run_app():
                 st.experimental_rerun()  # Rerun the app to update the dataset selectbox
 
 
-        if generate_button:  # Handle the click event of the "Generate Dataset" button
-            dataset = generate_dataset(number_of_employees)
-            st.session_state.datasets[dataset_name] = (dataset, capacity)
-            st.session_state.selected_dataset = dataset_name  # Update the selected dataset
-            st.experimental_rerun()  # Rerun the app to update the dataset selectbox
+        
 
 
 
