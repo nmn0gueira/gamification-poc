@@ -36,7 +36,7 @@ def run_app():
         with right_column:
             capacity = st.number_input("Capacity", min_value=1, value=500)
 
-        dataset_name = st.text_input("Dataset Name", "Dataset 1")  # User-defined dataset name
+        dataset_name = st.text_input("Dataset Name", "printing")  # User-defined dataset name
 
         generate_button = st.button("Generate Dataset", use_container_width=True)
 
@@ -49,6 +49,9 @@ def run_app():
 
 
         if generate_button:  # Handle the click event of the "Generate Dataset" button
+            if dataset_name.__contains__(" "):
+                st.error("Dataset name cannot contain spaces.")
+                return
             dataset = generate_dataset(number_of_employees)
             st.session_state.datasets[dataset_name] = (dataset, capacity)
             st.session_state.selected_dataset = dataset_name  # Update the selected dataset
@@ -61,7 +64,7 @@ def run_app():
                 st.warning("No datasets to delete.")
             else:
                 del st.session_state.datasets[st.session_state.selected_dataset]
-                
+
                 if st.session_state.datasets:
                     st.session_state.selected_dataset = list(st.session_state.datasets.keys())[0]
                     st.sessions_state.lp_changed = True

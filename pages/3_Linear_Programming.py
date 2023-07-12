@@ -5,43 +5,109 @@ from packages.linear_programming.lp_solver import solve_linear_programming, Stat
 from packages.utils.utils import load_session_state, hide_streamlit_style
 
 
+CONSTRAINTS_PER_EMPLOYEE = 2
+
 def display_model():
+    number_of_employees = len(st.session_state.datasets[st.session_state.selected_dataset][0]) # Each employee is a row in the dataset
+
+    constraints = list(st.session_state.lp_model.constraints.values())
+
+    # Related to the number of tasks executed being equal between machines
+    equality_constraints = constraints[0:len(st.session_state.lp_dataframe)-1]
+
+    # Related to the unit processing times from the dataframe (there are 2 constraints per employee)
+    unit_processing_time_constraints = constraints[len(st.session_state.lp_dataframe)-1:len(constraints) - number_of_employees*CONSTRAINTS_PER_EMPLOYEE]
+
+    # Related to the employees' capacities  (there are 2 constraints per employee)
+    employees_capacity_constraints = constraints[len(constraints) - number_of_employees*CONSTRAINTS_PER_EMPLOYEE:len(constraints)]
+
+    with st.container():
+        left_column, right_column = st.columns(2)
+
+        with left_column:
+            st.subheader("Production")
+            # The total number of pieces produced is the value of the objective function divided by the number of tasks
+            st.subheader(f"{int(st.session_state.lp_model.objective.value()/len(st.session_state.lp_dataframe))} pieces")
+
+        with right_column:
+            st.subheader("Total Hours Worked")
+            hours_worked = 0
+            for constraint in employees_capacity_constraints:
+                hours_worked += constraint.value() - constraint.constant
+
+            st.subheader(f"{int(hours_worked)} hours")
+
+
+    st.markdown("---")
+
+    # Por isto num somatorio ou assim
     # Display the objective function
-    left_column, right_column = st.columns(2)
+    with st.container():
+        st.subheader("Objective Function")
+        st.write(str(st.session_state.lp_model.objective))
 
-    with left_column:
-        st.subheader("Production")
-        # The total number of pieces produced is the value of the objective function divided by the number of tasks
-        st.subheader(f"{int(st.session_state.lp_model.objective.value()/len(st.session_state.lp_dataframe))} pieces")
+    st.markdown("##")
+    
+    # Display the variables and their values in a bar chart per task
+    with st.container():
+        st.subheader("Variables")
+        variables = {task_name : [] for task_name in st.session_state.lp_dataframe.index} # Create a dictionary of lists to store the variables
+        for variable in st.session_state.lp_model.variables():
+            variables[variable.name[1:-1]].append(variable.value()) # Remove the "X" and the number from the variable name to obtain the task name
 
-    with right_column:
-        st.subheader("Total Hours Worked")
-        # st.subheader(f"{st.session_state.lp_model.objective.value()} hours")
+        task = st.selectbox("Select a task", list(variables.keys()))
+        variables_df = pd.DataFrame(variables[task], columns=["Value"])
+        variables_df.index += 1    # Add 1 to the index to start at 1 instead of 0
 
+        fig_variables = px.bar(
+            variables_df,
+            x=variables_df.index,
+            y="Value",
+            orientation="v",
+            color_discrete_sequence=["#636EFA"] * len(variables_df),
+            template="plotly_white",
+            labels={"index": "Person", "Value": "Pieces processed"},
+            )
+        
+        fig_variables.update_layout(
+            xaxis=dict(showgrid=False, zeroline=False, tickmode="linear", fixedrange=True),
+            yaxis=dict(showgrid=False, zeroline=False, fixedrange=True),
+            plot_bgcolor="rgba(0,0,0,0)"
+            )
+        
+        st.plotly_chart(fig_variables, use_container_width=True)
 
-    # Por isto num somatorio
-    st.subheader("Objective Function")
-    st.write(str(st.session_state.lp_model.objective))
+        for variable in st.session_state.lp_model.variables():
+            st.write(f"{variable.name}: {variable.value()}")
+        
 
-    # Display the variables and their values in a table
-    st.subheader("Variables")
-    variables_table = []
-
-    # Por isto num bar chart selecionavel por tarefa
-    for variable in st.session_state.lp_model.variables():
-        variables_table.append([variable.name, variable.varValue])
-    st.table(variables_table)
+    st.markdown("##")
 
     # Display the constraints
-    # Organizar isto ou por tipo de constraint ou por tarefa
-    st.subheader("Constraints")
-    for constraint in st.session_state.lp_model.constraints.values():
-        st.write(str(constraint))
+    with st.container():
+        st.subheader("Constraints")
+        equality_constraints_table = unit_processing_time_constraints_table = employees_capacity_constraints_table = pd.DataFrame(columns=["Constraint", "Value"])
+        if equality_constraints != []:  # If there are no equality constraints, don't display the table
+            st.write("Equality Constraints")
+            for constraint in equality_constraints:
+                equality_constraints_table = pd.concat([equality_constraints_table, pd.DataFrame([[str(constraint), constraint.value()-constraint.constant]], columns=["Constraint", "Value"])])
+        
+            st.table(equality_constraints_table)
+        
+        st.write("Unit Processing Time Constraints")
+        for constraint in unit_processing_time_constraints:
+            unit_processing_time_constraints_table = pd.concat([unit_processing_time_constraints_table, pd.DataFrame([[str(constraint), constraint.value()-constraint.constant]], columns=["Constraint", "Value"])])
 
+        st.table(unit_processing_time_constraints_table)
+
+        st.write("Employee Work Time Constraints")
+        for constraint in employees_capacity_constraints:
+            employees_capacity_constraints_table = pd.concat([employees_capacity_constraints_table, pd.DataFrame([[str(constraint), constraint.value()-constraint.constant]], columns=["Constraint", "Value"])])
+        
+        st.table(employees_capacity_constraints_table)
 
 
 def run_app():
-
     # Main content
     with st.container():
         if st.session_state.lp_dataframe is not None:
@@ -50,11 +116,9 @@ def run_app():
             if st.session_state.lp_changed:
                 st.warning("Datasets have changed. Please build the dataframe again.")
 
-
             st.header("Model information")
 
             st.dataframe(st.session_state.lp_dataframe, use_container_width=True)
-
 
             if st.session_state.lp_model is not None:
                 # {0: 'Not Solved', 1: 'Optimal', -1: 'Infeasible', -2: 'Unbounded', -3: 'Undefined'}
@@ -74,18 +138,18 @@ def run_app():
                     case _:
                         st.warning("No Solution Found")
 
-
         else:
             st.info("Linear programming data frame not built. Please build the data frame first, make sure you have generated datasets.")
 
-
+    # Sidebar content
     with st.sidebar:
         st.header("Linear Programming Model Solver")
 
         min_hours_worked = st.number_input("Minimum hours of work required", min_value=1, value=100)
 
-        left_column, right_column = st.columns(2)
+        max_hours_worked = st.number_input("Maximum hours of work allowed", min_value=1, value=240)
 
+        left_column, right_column = st.columns(2)
 
         with left_column:
             build_button = st.button("Build dataframe")
@@ -93,17 +157,16 @@ def run_app():
         with right_column:
             solve_button = st.button("Solve LP model")
 
-        
         if st.session_state.lp_dataframe is not None:
+            st.markdown("---")
             st.subheader("Average Productivity per Task")
             st.markdown(f"**{round(st.session_state.average_productivity_per_task,4)}** hours per task")
 
-
         if build_button:
-            if len(st.session_state.datasets) == 0:
+            if len(st.session_state.datasets) == 0: # If there are no datasets, warn the user
                 st.warning("No datasets to use. Please generate a dataset.")
 
-            elif st.session_state.lp_changed == False:
+            elif st.session_state.lp_changed == False:  # If the datasets have not changed, warn the user
                 st.warning("Datasets have not changed.")
                 
             else:
@@ -134,11 +197,11 @@ def run_app():
                 st.experimental_rerun()
 
         if solve_button:
-            if st.session_state.lp_dataframe is None:
+            if st.session_state.lp_dataframe is None:   # If the dataframe has not been built, warn the user
                 st.warning("No problem to solve. Please build the dataframe first.")
 
             else:
-                st.session_state.lp_model = solve_linear_programming(st.session_state.lp_dataframe, min_hours_worked)
+                st.session_state.lp_model = solve_linear_programming(st.session_state.lp_dataframe, min_hours_worked, max_hours_worked)
                 st.experimental_rerun()
 
 

@@ -9,7 +9,7 @@ class Status:
     UNDEFINED = -3
 
 
-def solve_linear_programming(dataframe: pd.DataFrame, min_hours_worked: int) -> LpProblem:
+def solve_linear_programming(dataframe: pd.DataFrame, min_hours_worked: int, max_hours_worked: int) -> LpProblem:
 
     variables = {task_name : [] for task_name in dataframe.index} # Create a dictionary of lists to store the variables
     number_of_employees = len(dataframe.columns) - 1
@@ -45,14 +45,17 @@ def solve_linear_programming(dataframe: pd.DataFrame, min_hours_worked: int) -> 
         model += lpSum(aux_list) <= dataframe.loc[key]['Capacity'] # Sum of each task's variables list must be less than or equal to the task's capacity
 
 
-    # Related to the employees' capacities (these constraints already consider non-negativity)
+    # Related to the employees' capacities
     for i in range(number_of_employees):    # For each employee
         aux_list = []
 
         for key in variables:   # For each task
             aux_list.append(variables[key][i]*dataframe.loc[key][i])
         
-        model += lpSum(aux_list) >= min_hours_worked # In total, the time spent by an employee must be greater than or equal to the minimum hours worked
+        sum = lpSum(aux_list)
+
+        model += sum >= min_hours_worked # In total, the time spent by an employee must be greater than or equal to the minimum hours worked
+        model += sum <= max_hours_worked # In total, the time spent by an employee must be less than or equal to the maximum hours worked
 
 
     # Solve model
