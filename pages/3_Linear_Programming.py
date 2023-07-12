@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from packages.linear_programming.lp_solver import solve_linear_programming, Status
+from packages.utils.utils import load_session_state, hide_streamlit_style
 
 
 def display_model():
@@ -20,6 +21,10 @@ def display_model():
     st.header("Constraints")
     for constraint in st.session_state.lp_model.constraints.values():
         st.write(str(constraint))
+
+    st.header("Pieces produced")
+    # The total number of pieces produced is the value of the objective function divided by the number of tasks
+    st.write(st.session_state.lp_model.objective.value()/len(st.session_state.lp_dataframe))
 
 
 def run_app():
@@ -42,28 +47,35 @@ def run_app():
                         display_model()
                     case Status.INFEASIBLE:
                         st.error("Infeasible Problem")
+                        st.info("Make sure the minimum hours worked is not too high.")
                     case Status.UNBOUNDED:
                         st.error("Unbounded Problem")
                     case Status.UNDEFINED:
                         st.error("Undefined Problem")
                     case _:
                         st.warning("No Solution Found")
-                
-
 
 
         else:
-            st.write("Upload a dataset to start")
+            st.info("Linear programming data frame not built. Please build the data frame first, make sure you have generated datasets.")
 
 
     with st.sidebar:
-        st.header("LP Solver")
-        load_button = st.button("Load Datasets")
-        solve_button = st.button("Solve")
+        st.header("Linear Programming Model Solver")
 
-        if load_button:
-            if "datasets" not in st.session_state or len(st.session_state.datasets) == 0:
-                st.warning("No datasets to load.")
+        min_hours_worked = st.number_input("Minimum hours of work required", min_value=1, value=100)
+
+        left_column, right_column = st.columns(2)
+
+        with left_column:
+            build_button = st.button("Build dataframe")
+
+        with right_column:
+            solve_button = st.button("Solve LP problem")
+
+        if build_button:
+            if len(st.session_state.datasets) == 0:
+                st.warning("No datasets to use. Please generate a dataset.")
                 
             else:
                 number_of_employees = len(st.session_state.datasets[st.session_state.selected_dataset][0]) # Each employee is a row in the dataset
@@ -85,24 +97,21 @@ def run_app():
                 st.experimental_rerun()
 
         if solve_button:
-            st.session_state.lp_model = solve_linear_programming(st.session_state.lp_dataframe)
-            st.experimental_rerun()
+            if st.session_state.lp_dataframe is None:
+                st.warning("No problem to solve. Please build the dataframe first.")
+
+            else:
+                st.session_state.lp_model = solve_linear_programming(st.session_state.lp_dataframe, min_hours_worked)
+                st.experimental_rerun()
 
 
 if __name__ == "__main__":
     st.set_page_config(page_title="Linear Programming", page_icon=":books:", layout="wide")
 
-    if "lp_dataframe" not in st.session_state:
-        st.session_state.lp_dataframe = None  # Dataframe with the unit processing times
+    # Load session state
+    load_session_state()
 
-    if "lp_model" not in st.session_state:
-        st.session_state.lp_model = None
+    # Hide the Streamlit branding
+    hide_streamlit_style()
 
-    hide_st_style = """
-                    <style>
-                    #MainMenu {visibility: hidden;}
-                    footer {visibility: hidden;}
-                    </style>
-                    """
-    st.markdown(hide_st_style, unsafe_allow_html=True)  # Hide the Streamlit footer and menu button
     run_app()

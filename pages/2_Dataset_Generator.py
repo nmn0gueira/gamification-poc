@@ -1,5 +1,6 @@
 import streamlit as st
 from packages.dataset_generator.datagen import generate_dataset
+from packages.utils.utils import load_session_state, hide_streamlit_style
 
 def run_app():
     
@@ -14,7 +15,7 @@ def run_app():
             dataset_to_display = st.selectbox("Select Dataset", dataset_names, index=dataset_names.index(st.session_state.selected_dataset),
                                               key="dataset_selectbox")
             st.session_state.selected_dataset = dataset_to_display  # Update the selected dataset
-            st.dataframe(st.session_state.datasets[st.session_state.selected_dataset][0])
+            st.dataframe(st.session_state.datasets[st.session_state.selected_dataset][0])   # Display the selected dataset
 
         else:
             # No datasets available
@@ -29,14 +30,20 @@ def run_app():
         left_column, right_column = st.columns(2)
 
         with left_column:
-            number_of_employees = st.number_input("Number of Employees", min_value=1, value=5, disabled=st.session_state.disabled)
+            number_of_employees = st.number_input("Number of Employees", min_value=1, value=3, disabled=st.session_state.disabled)
         with right_column:
             capacity = st.number_input("Capacity", min_value=1, value=500)
 
         dataset_name = st.text_input("Dataset Name", "Dataset 1")  # User-defined dataset name
 
-        generate_button = st.button("Generate Dataset")
-        delete_button = st.button("Delete All Datasets")
+        generate_button = st.button("Generate Dataset", use_container_width=True)
+
+        left_column, right_column = st.columns(2)
+        
+        with left_column:
+            delete_selected_button = st.button("Delete Selected Dataset")
+        with right_column:
+            delete_all_button = st.button("Delete All Datasets")
 
 
         if generate_button:  # Handle the click event of the "Generate Dataset" button
@@ -46,7 +53,15 @@ def run_app():
             st.experimental_rerun()  # Rerun the app to update the dataset selectbox
 
 
-        if delete_button:  # Handle the click event of the "Delete All Datasets" button
+        if delete_selected_button:  # Handle the click event of the "Delete Selected Dataset" button
+            if not st.session_state.datasets:
+                st.warning("No datasets to delete.")
+            else:
+                del st.session_state.datasets[st.session_state.selected_dataset]
+                st.session_state.selected_dataset = list(st.session_state.datasets.keys())[0] if st.session_state.datasets else None
+                st.experimental_rerun()  # Rerun the app to update the dataset selectbox
+
+        if delete_all_button:  # Handle the click event of the "Delete All Datasets" button
             if not st.session_state.datasets:
                 st.warning("No datasets to delete.")
             else:  
@@ -62,19 +77,10 @@ def run_app():
 if __name__ == "__main__":
     st.set_page_config(page_title="Dataset Generator", page_icon=":chart_with_upwards_trend:", layout="wide")
 
-    if "datasets" not in st.session_state:
-        st.session_state.datasets = {}  # Create the datasets dictionary in session_state
+    # Load session state
+    load_session_state()
 
-    if "selected_dataset" not in st.session_state:
-        st.session_state.selected_dataset = None  # Initialize the selected dataset
-
-    hide_st_style = """
-                    <style>
-                    #MainMenu {visibility: hidden;}
-                    footer {visibility: hidden;}
-                    </style>
-                    """
-    
-    st.markdown(hide_st_style, unsafe_allow_html=True)  # Hide the Streamlit footer and menu button
+    # Hide the Streamlit branding
+    hide_streamlit_style()
 
     run_app()

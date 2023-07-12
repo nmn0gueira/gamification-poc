@@ -1,4 +1,5 @@
 import streamlit as st
+from packages.utils.utils import load_session_state, hide_streamlit_style
 
 def run_app():
     st.title("Home")
@@ -7,11 +8,10 @@ def run_app():
 if __name__ == "__main__":
     st.set_page_config(page_title="Home", page_icon=":house:", layout="wide")
 
-    hide_st_style = """
-                    <style>
-                    #MainMenu {visibility: hidden;}
-                    footer {visibility: hidden;}
-                    </style>
-                    """
-    st.markdown(hide_st_style, unsafe_allow_html=True)  # Hide the Streamlit footer and menu button
+    # Load session state
+    load_session_state()
+
+    # Hide the Streamlit branding
+    hide_streamlit_style()
+    
     run_app()

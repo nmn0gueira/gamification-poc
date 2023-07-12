@@ -1,18 +1,19 @@
 import streamlit as st
 import requests
 
+
 def load_session_state():
     """
-    Load the session state variables
+    Load the session state variables for the first time
     """
-    if not st.session_state:
-        st.session_state.datasets = {}
-        st.session_state.selected_dataset = None
-        st.session_state.disabled = False
-        st.session_state.lp_dataframe = None
-        st.session_state.lp_model = None
+    if len(st.session_state) == 0:
+        st.session_state.datasets = {}  # Datasets dictionary
+        st.session_state.selected_dataset = None    # Selected dataset
+        st.session_state.disabled = False   # Disabled state of the number input
+        st.session_state.lp_dataframe = None    # Dataframe with the unit processing times
+        st.session_state.lp_model = None    # Linear Programming model
 
-
+@st.cache_data
 def load_lottieurl(url):
     r = requests.get(url)
     if r.status_code != 200:
@@ -23,3 +24,13 @@ def load_lottieurl(url):
 def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+def hide_streamlit_style():
+    hide_streamlit_style = """
+                <style>
+                #MainMenu {visibility: hidden;}
+                footer {visibility: hidden;}
+                header {visibility: hidden;}
+                </style>
+                """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
