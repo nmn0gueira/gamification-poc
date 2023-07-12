@@ -8,7 +8,9 @@ def run_app():
     with st.container():
         if st.session_state.datasets:
             # Datasets exist
-            st.subheader("Available Datasets")
+            st.header("Available Datasets")
+            st.markdown("##")
+
             st.session_state.disabled = True
 
             dataset_names = list(st.session_state.datasets.keys())
@@ -25,7 +27,7 @@ def run_app():
     
     # Sidebar content
     with st.sidebar:
-        st.header("Generate Dataset")
+        st.header("Employee Productivity Dataset Generator")
 
         left_column, right_column = st.columns(2)
 
@@ -50,6 +52,7 @@ def run_app():
             dataset = generate_dataset(number_of_employees)
             st.session_state.datasets[dataset_name] = (dataset, capacity)
             st.session_state.selected_dataset = dataset_name  # Update the selected dataset
+            st.session_state.lp_changed = True
             st.experimental_rerun()  # Rerun the app to update the dataset selectbox
 
 
@@ -58,7 +61,13 @@ def run_app():
                 st.warning("No datasets to delete.")
             else:
                 del st.session_state.datasets[st.session_state.selected_dataset]
-                st.session_state.selected_dataset = list(st.session_state.datasets.keys())[0] if st.session_state.datasets else None
+                
+                if st.session_state.datasets:
+                    st.session_state.selected_dataset = list(st.session_state.datasets.keys())[0]
+                    st.sessions_state.lp_changed = True
+                else:
+                    st.session_state.selected_dataset = None
+            
                 st.experimental_rerun()  # Rerun the app to update the dataset selectbox
 
         if delete_all_button:  # Handle the click event of the "Delete All Datasets" button

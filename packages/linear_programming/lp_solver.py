@@ -45,7 +45,7 @@ def solve_linear_programming(dataframe: pd.DataFrame, min_hours_worked: int) -> 
         model += lpSum(aux_list) <= dataframe.loc[key]['Capacity'] # Sum of each task's variables list must be less than or equal to the task's capacity
 
 
-    # Related to the employees' capacities
+    # Related to the employees' capacities (these constraints already consider non-negativity)
     for i in range(number_of_employees):    # For each employee
         aux_list = []
 
@@ -53,12 +53,6 @@ def solve_linear_programming(dataframe: pd.DataFrame, min_hours_worked: int) -> 
             aux_list.append(variables[key][i]*dataframe.loc[key][i])
         
         model += lpSum(aux_list) >= min_hours_worked # In total, the time spent by an employee must be greater than or equal to the minimum hours worked
-
-
-    # Non-negativity constraints
-    # for key in variables:   # For each task
-    #     for i in range(number_of_employees):    # For each employee
-    #         model += variables[key][i] >= 0 # Each variable must be greater than or equal to zero
 
 
     # Solve model
