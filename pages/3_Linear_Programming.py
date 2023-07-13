@@ -4,35 +4,63 @@ import plotly.express as px
 from packages.linear_programming.lp_solver import solve_linear_programming, Status
 from packages.utils.utils import load_session_state, hide_streamlit_style
 
+# Constraint types
+EQUALITY = "equality"
+UNIT_PROCESSING_TIME = "unit_processing_time"
+MIN_EMPLOYEE_CAPACITY = "min_employee_capacity"
+MAX_EMPLOYEE_CAPACITY = "max_employee_capacity"
 
-CONSTRAINTS_PER_EMPLOYEE = 2
+# Linear Programming model information
+OBJECTIVE = 0
+VARIABLES = 1
+CONSTRAINTS = 2
+STATUS = 3
 
-def display_model():
-    number_of_employees = len(st.session_state.datasets[st.session_state.selected_dataset][0]) # Each employee is a row in the dataset
 
-    constraints = list(st.session_state.lp_model.constraints.values())
+def get_model_info(lp_model):
+    # Get the variables and their values
+    variables = {task_name : [] for task_name in st.session_state.lp_dataframe.index} # Create a dictionary of lists to store the variables
+    for variable in lp_model.variables():
+        variables[variable.name[1:-1]].append(variable.value()) # Remove the "X" and the number from the variable name to obtain the task name
+
+
+    constraints = list(lp_model.constraints.values())
+
+    number_of_tasks = len(st.session_state.lp_dataframe)
 
     # Related to the number of tasks executed being equal between machines
-    equality_constraints = constraints[0:len(st.session_state.lp_dataframe)-1]
+    equality_constraints = constraints[0:number_of_tasks-1]
 
-    # Related to the unit processing times from the dataframe (there are 2 constraints per employee)
-    unit_processing_time_constraints = constraints[len(st.session_state.lp_dataframe)-1:len(constraints) - number_of_employees*CONSTRAINTS_PER_EMPLOYEE]
+    # Related to the unit processing times from the dataframe
+    unit_processing_time_constraints = constraints[number_of_tasks-1:number_of_tasks-1 + number_of_tasks]
 
-    # Related to the employees' capacities  (there are 2 constraints per employee)
-    employees_capacity_constraints = constraints[len(constraints) - number_of_employees*CONSTRAINTS_PER_EMPLOYEE:len(constraints)]
+    # Related to the employees' capacities (minimum hours required)
+    min_employee_capacity_constraints = constraints[number_of_tasks-1 + number_of_tasks::2]
 
+    # Related to the employees' capacities (maximum hours allowed)
+    max_employee_capacity_constraints = constraints[number_of_tasks-1 + number_of_tasks + 1::2]
+
+    # Create a dictionary of lists of constraints
+    constraints = {EQUALITY : equality_constraints, UNIT_PROCESSING_TIME : unit_processing_time_constraints, MIN_EMPLOYEE_CAPACITY : min_employee_capacity_constraints, MAX_EMPLOYEE_CAPACITY : max_employee_capacity_constraints}
+
+    return lp_model.objective, variables, constraints, lp_model.status
+
+
+
+def display_model():
+   
     with st.container():
         left_column, right_column = st.columns(2)
 
         with left_column:
             st.subheader("Production")
             # The total number of pieces produced is the value of the objective function divided by the number of tasks
-            st.subheader(f"{int(st.session_state.lp_model.objective.value()/len(st.session_state.lp_dataframe))} pieces")
+            st.subheader(f"{int(st.session_state.lp_model_info[OBJECTIVE].value()/len(st.session_state.lp_dataframe))} pieces")
 
         with right_column:
             st.subheader("Total Hours Worked")
             hours_worked = 0
-            for constraint in employees_capacity_constraints:
+            for constraint in st.session_state.lp_model_info[CONSTRAINTS][MIN_EMPLOYEE_CAPACITY]:
                 hours_worked += constraint.value() - constraint.constant
 
             st.subheader(f"{int(hours_worked)} hours")
@@ -44,17 +72,16 @@ def display_model():
     # Display the objective function
     with st.container():
         st.subheader("Objective Function")
-        st.write(str(st.session_state.lp_model.objective))
+        st.write(str(st.session_state.lp_model_info[OBJECTIVE]))
 
     st.markdown("##")
     
     # Display the variables and their values in a bar chart per task
     with st.container():
         st.subheader("Variables")
-        variables = {task_name : [] for task_name in st.session_state.lp_dataframe.index} # Create a dictionary of lists to store the variables
-        for variable in st.session_state.lp_model.variables():
-            variables[variable.name[1:-1]].append(variable.value()) # Remove the "X" and the number from the variable name to obtain the task name
 
+        variables = st.session_state.lp_model_info[VARIABLES]
+        
         task = st.selectbox("Select a task", list(variables.keys()))
         variables_df = pd.DataFrame(variables[task], columns=["Value"])
         variables_df.index += 1    # Add 1 to the index to start at 1 instead of 0
@@ -77,8 +104,8 @@ def display_model():
         
         st.plotly_chart(fig_variables, use_container_width=True)
 
-        for variable in st.session_state.lp_model.variables():
-            st.write(f"{variable.name}: {variable.value()}")
+        for i in range(len(variables[task])):
+            st.markdown(f"**Person {i+1}** processed **{variables[task][i]}** pieces.")
         
 
     st.markdown("##")
@@ -86,25 +113,32 @@ def display_model():
     # Display the constraints
     with st.container():
         st.subheader("Constraints")
-        equality_constraints_table = unit_processing_time_constraints_table = employees_capacity_constraints_table = pd.DataFrame(columns=["Constraint", "Value"])
+        
+        equality_constraints_table = unit_processing_time_constraints_table = min_employees_capacity_constraints_table = max_employees_capacity_constraints_table = pd.DataFrame(columns=["Constraint", "Value"])
+        equality_constraints = st.session_state.lp_model_info[CONSTRAINTS][EQUALITY]
         if equality_constraints != []:  # If there are no equality constraints, don't display the table
             st.write("Equality Constraints")
             for constraint in equality_constraints:
-                equality_constraints_table = pd.concat([equality_constraints_table, pd.DataFrame([[str(constraint), constraint.value()-constraint.constant]], columns=["Constraint", "Value"])])
-        
+                equality_constraints_table = pd.concat([equality_constraints_table, pd.DataFrame([[str(constraint), constraint.value()-constraint.constant]], columns=["Constraint", "Value"])])   
             st.table(equality_constraints_table)
         
+        unit_processing_time_constraints = st.session_state.lp_model_info[CONSTRAINTS][UNIT_PROCESSING_TIME]
         st.write("Unit Processing Time Constraints")
         for constraint in unit_processing_time_constraints:
             unit_processing_time_constraints_table = pd.concat([unit_processing_time_constraints_table, pd.DataFrame([[str(constraint), constraint.value()-constraint.constant]], columns=["Constraint", "Value"])])
-
         st.table(unit_processing_time_constraints_table)
 
-        st.write("Employee Work Time Constraints")
-        for constraint in employees_capacity_constraints:
-            employees_capacity_constraints_table = pd.concat([employees_capacity_constraints_table, pd.DataFrame([[str(constraint), constraint.value()-constraint.constant]], columns=["Constraint", "Value"])])
-        
-        st.table(employees_capacity_constraints_table)
+        min_employee_capacity_constraints = st.session_state.lp_model_info[CONSTRAINTS][MIN_EMPLOYEE_CAPACITY]
+        st.write("Employee Work Time Constraints (Minimum)")
+        for constraint in min_employee_capacity_constraints:
+            min_employees_capacity_constraints_table = pd.concat([min_employees_capacity_constraints_table, pd.DataFrame([[str(constraint), constraint.value()-constraint.constant]], columns=["Constraint", "Value"])])   
+        st.table(min_employees_capacity_constraints_table)
+
+        max_employee_capacity_constraints = st.session_state.lp_model_info[CONSTRAINTS][MAX_EMPLOYEE_CAPACITY]
+        st.write("Employee Work Time Constraints (Maximum)")
+        for constraint in max_employee_capacity_constraints:
+            max_employees_capacity_constraints_table = pd.concat([max_employees_capacity_constraints_table, pd.DataFrame([[str(constraint), constraint.value()-constraint.constant]], columns=["Constraint", "Value"])])
+        st.table(max_employees_capacity_constraints_table)
 
 
 def run_app():
@@ -120,9 +154,9 @@ def run_app():
 
             st.dataframe(st.session_state.lp_dataframe, use_container_width=True)
 
-            if st.session_state.lp_model is not None:
+            if st.session_state.lp_model_info is not None:
                 # {0: 'Not Solved', 1: 'Optimal', -1: 'Infeasible', -2: 'Unbounded', -3: 'Undefined'}
-                status = st.session_state.lp_model.status
+                status = st.session_state.lp_model_info[STATUS]
 
                 match status:
                     case Status.OPTIMAL:
@@ -181,7 +215,7 @@ def run_app():
 
                 # Create complete dataframe with unit processing times
                 # Load from datasets
-                for task_name, (dataset, capacity) in st.session_state.datasets.items():
+                for task_name, (dataset, capacity, _) in st.session_state.datasets.items():
                     unit_processing_times = dataset['unit_processing_time'].values
                     df.loc[task_name] = unit_processing_times
                     average_productivity_per_task += unit_processing_times.mean()
@@ -193,7 +227,7 @@ def run_app():
                 df['Capacity'] = capacities
 
                 st.session_state.lp_dataframe = df
-                st.session_state.lp_model = None
+                st.session_state.lp_model_info = None
                 st.experimental_rerun()
 
         if solve_button:
@@ -201,7 +235,8 @@ def run_app():
                 st.warning("No problem to solve. Please build the dataframe first.")
 
             else:
-                st.session_state.lp_model = solve_linear_programming(st.session_state.lp_dataframe, min_hours_worked, max_hours_worked)
+                # This is a LpProblem object
+                st.session_state.lp_model_info = get_model_info(solve_linear_programming(st.session_state.lp_dataframe, min_hours_worked, max_hours_worked))    
                 st.experimental_rerun()
 
 

@@ -27,7 +27,7 @@ def run_app():
     
     # Sidebar content
     with st.sidebar:
-        st.header("Employee Productivity Dataset Generator")
+        st.header("Productivity Dataset Generator")
 
         left_column, right_column = st.columns(2)
 
@@ -37,6 +37,8 @@ def run_app():
             capacity = st.number_input("Capacity", min_value=1, value=500)
 
         dataset_name = st.text_input("Dataset Name", "printing")  # User-defined dataset name
+
+        task_difficulty = st.slider("Task Difficulty", min_value=1, max_value=10, value=5, step=1)
 
         generate_button = st.button("Generate Dataset", use_container_width=True)
 
@@ -53,7 +55,7 @@ def run_app():
                 st.error("Dataset name cannot contain spaces.")
                 return
             dataset = generate_dataset(number_of_employees)
-            st.session_state.datasets[dataset_name] = (dataset, capacity)
+            st.session_state.datasets[dataset_name] = (dataset, capacity, task_difficulty)
             st.session_state.selected_dataset = dataset_name  # Update the selected dataset
             st.session_state.lp_changed = True
             st.experimental_rerun()  # Rerun the app to update the dataset selectbox
