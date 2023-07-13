@@ -17,6 +17,22 @@ def run_app():
             dataset_to_display = st.selectbox("Select Dataset", dataset_names, index=dataset_names.index(st.session_state.selected_dataset),
                                               key="dataset_selectbox")
             st.session_state.selected_dataset = dataset_to_display  # Update the selected dataset
+
+            st.markdown("##")
+
+            left_column, right_column = st.columns(2)
+
+            with left_column:
+                st.subheader("Dataset Information")
+                st.markdown(f"**Number of Employees:** {len(st.session_state.datasets[st.session_state.selected_dataset][0])}")
+
+            with right_column:
+                st.subheader("Dataset Settings")
+                st.markdown(f"**Capacity:** {st.session_state.datasets[st.session_state.selected_dataset][1]} hours")
+                st.markdown(f"**Task Difficulty:** {':star:'* st.session_state.datasets[st.session_state.selected_dataset][2]}")
+
+            st.markdown("##")
+
             st.dataframe(st.session_state.datasets[st.session_state.selected_dataset][0])   # Display the selected dataset
 
         else:
@@ -32,9 +48,10 @@ def run_app():
         left_column, right_column = st.columns(2)
 
         with left_column:
-            number_of_employees = st.number_input("Number of Employees", min_value=1, value=3, disabled=st.session_state.disabled)
+            default_value = len(st.session_state.datasets[st.session_state.selected_dataset][0]) if st.session_state.datasets else 5
+            number_of_employees = st.number_input("Number of Employees", min_value=1, value=default_value, disabled=st.session_state.disabled)
         with right_column:
-            capacity = st.number_input("Capacity", min_value=1, value=500)
+            capacity = st.number_input("Capacity (hrs)", min_value=1, value=600)
 
         dataset_name = st.text_input("Dataset Name", "printing")  # User-defined dataset name
 
@@ -45,9 +62,9 @@ def run_app():
         left_column, right_column = st.columns(2)
         
         with left_column:
-            delete_selected_button = st.button("Delete Selected Dataset")
+            delete_selected_button = st.button("Delete Selected", use_container_width=True)
         with right_column:
-            delete_all_button = st.button("Delete All Datasets")
+            delete_all_button = st.button("Delete All", use_container_width=True)
 
 
         if generate_button:  # Handle the click event of the "Generate Dataset" button

@@ -21,7 +21,10 @@ def get_model_info(lp_model):
     # Get the variables and their values
     variables = {task_name : [] for task_name in st.session_state.lp_dataframe.index} # Create a dictionary of lists to store the variables
     for variable in lp_model.variables():
-        variables[variable.name[1:-1]].append(variable.value()) # Remove the "X" and the number from the variable name to obtain the task name
+        # Remove numbers and "X" from the variable name to obtain the task name
+        task_name = variable.name[1:].translate(str.maketrans('', '', '0123456789'))
+
+        variables[task_name].append(variable.value()) # Remove the "X" and the number from the variable name to obtain the task name
 
 
     constraints = list(lp_model.constraints.values())
@@ -43,6 +46,15 @@ def get_model_info(lp_model):
     # Create a dictionary of lists of constraints
     constraints = {EQUALITY : equality_constraints, UNIT_PROCESSING_TIME : unit_processing_time_constraints, MIN_EMPLOYEE_CAPACITY : min_employee_capacity_constraints, MAX_EMPLOYEE_CAPACITY : max_employee_capacity_constraints}
 
+    # Store the total pieces produced and the total hours worked
+    # The total number of pieces produced is the value of the objective function divided by the number of tasks
+    st.session_state.total_pieces = int(lp_model.objective.value()/number_of_tasks)
+    hours_worked = 0
+    for constraint in min_employee_capacity_constraints: # Same as using max_employee_capacity_constraints
+        hours_worked += constraint.value() - constraint.constant
+
+    st.session_state.total_time = int(hours_worked)
+
     return lp_model.objective, variables, constraints, lp_model.status
 
 
@@ -54,21 +66,15 @@ def display_model():
 
         with left_column:
             st.subheader("Production")
-            # The total number of pieces produced is the value of the objective function divided by the number of tasks
-            st.subheader(f"{int(st.session_state.lp_model_info[OBJECTIVE].value()/len(st.session_state.lp_dataframe))} pieces")
+            st.subheader(f"{st.session_state.total_pieces} pieces")
 
         with right_column:
-            st.subheader("Total Hours Worked")
-            hours_worked = 0
-            for constraint in st.session_state.lp_model_info[CONSTRAINTS][MIN_EMPLOYEE_CAPACITY]:
-                hours_worked += constraint.value() - constraint.constant
-
-            st.subheader(f"{int(hours_worked)} hours")
+            st.subheader("Total Hours Worked")   
+            st.subheader(f"{st.session_state.total_time} hours")
 
 
     st.markdown("---")
 
-    # Por isto num somatorio ou assim
     # Display the objective function
     with st.container():
         st.subheader("Objective Function")
@@ -83,17 +89,17 @@ def display_model():
         variables = st.session_state.lp_model_info[VARIABLES]
         
         task = st.selectbox("Select a task", list(variables.keys()))
-        variables_df = pd.DataFrame(variables[task], columns=["Value"])
+        variables_df = pd.DataFrame(variables[task], columns=["Pieces Processed"])
         variables_df.index += 1    # Add 1 to the index to start at 1 instead of 0
+        variables_df.index.name = "Person"
 
         fig_variables = px.bar(
             variables_df,
             x=variables_df.index,
-            y="Value",
+            y="Pieces Processed",
             orientation="v",
             color_discrete_sequence=["#636EFA"] * len(variables_df),
             template="plotly_white",
-            labels={"index": "Person", "Value": "Pieces processed"},
             )
         
         fig_variables.update_layout(
@@ -102,12 +108,16 @@ def display_model():
             plot_bgcolor="rgba(0,0,0,0)"
             )
         
-        st.plotly_chart(fig_variables, use_container_width=True)
+        left_column, right_column = st.columns(2)
 
-        for i in range(len(variables[task])):
-            st.markdown(f"**Person {i+1}** processed **{variables[task][i]}** pieces.")
-        
+        with left_column:
+            st.plotly_chart(fig_variables, use_container_width=True)
 
+        with right_column:  # Display the values of the variables in a table
+            st.markdown("##")
+            st.dataframe(variables_df, use_container_width=True)
+
+            
     st.markdown("##")
 
     # Display the constraints
@@ -173,7 +183,7 @@ def run_app():
                         st.warning("No Solution Found")
 
         else:
-            st.info("Linear programming data frame not built. Please build the data frame first, make sure you have generated datasets.")
+            st.info("Linear programming dataframe not built. Make sure you have generated dataset to build the dataframe first")
 
     # Sidebar content
     with st.sidebar:
@@ -193,8 +203,8 @@ def run_app():
 
         if st.session_state.lp_dataframe is not None:
             st.markdown("---")
-            st.subheader("Average Productivity per Task")
-            st.markdown(f"**{round(st.session_state.average_productivity_per_task,4)}** hours per task")
+            st.subheader("Average Performance per Task")
+            st.markdown(f"**{round(st.session_state.average_performance_per_task,4)}** hours per task")
 
         if build_button:
             if len(st.session_state.datasets) == 0: # If there are no datasets, warn the user
@@ -209,20 +219,21 @@ def run_app():
                 number_of_employees = len(st.session_state.datasets[st.session_state.selected_dataset][0]) # Each employee is a row in the dataset
 
                 df = pd.DataFrame(columns=["Person " + str(i+1) for i in range(number_of_employees)])
+                df.index.name = "Task"
                 capacities = []
 
-                average_productivity_per_task = 0
+                average_performance_per_task = 0
 
                 # Create complete dataframe with unit processing times
                 # Load from datasets
                 for task_name, (dataset, capacity, _) in st.session_state.datasets.items():
                     unit_processing_times = dataset['unit_processing_time'].values
                     df.loc[task_name] = unit_processing_times
-                    average_productivity_per_task += unit_processing_times.mean()
+                    average_performance_per_task += unit_processing_times.mean()
                     capacities.append(capacity)
 
-                average_productivity_per_task /= len(st.session_state.datasets)
-                st.session_state.average_productivity_per_task = average_productivity_per_task
+                average_performance_per_task /= len(st.session_state.datasets)
+                st.session_state.average_performance_per_task = average_performance_per_task
 
                 df['Capacity'] = capacities
 
@@ -235,7 +246,6 @@ def run_app():
                 st.warning("No problem to solve. Please build the dataframe first.")
 
             else:
-                # This is a LpProblem object
                 st.session_state.lp_model_info = get_model_info(solve_linear_programming(st.session_state.lp_dataframe, min_hours_worked, max_hours_worked))    
                 st.experimental_rerun()
 

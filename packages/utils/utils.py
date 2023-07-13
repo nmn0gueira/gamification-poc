@@ -13,7 +13,9 @@ def load_session_state():
         st.session_state.lp_dataframe = None    # Dataframe with the unit processing times
         st.session_state.lp_model_info = None    # Linear Programming model
         st.session_state.lp_changed = True # Used to check if the LP model is no longer valid for current datasets
-        st.session_state.average_productivity_per_task = 0 # Average productivity per task
+        st.session_state.average_performance_per_task = 0 # Average productivity per task
+        st.session_state.total_pieces = 0 # Total number of pieces
+        st.session_state.total_time = 0 # Total time
 
 @st.cache_data
 def load_lottieurl(url):
