@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import numpy as np
 from packages.linear_programming.lp_solver import solve_linear_programming, Status
 from packages.utils.utils import load_session_state, hide_streamlit_style
 
@@ -218,9 +219,8 @@ def run_app():
 
                 number_of_employees = len(st.session_state.datasets[st.session_state.selected_dataset][0]) # Each employee is a row in the dataset
 
-                df = pd.DataFrame(columns=["Person " + str(i+1) for i in range(number_of_employees)])
+                df = pd.DataFrame(columns=["Person " + str(i+1) for i in range(number_of_employees)] + ["Capacity"])
                 df.index.name = "Task"
-                capacities = []
 
                 average_performance_per_task = 0
 
@@ -228,14 +228,12 @@ def run_app():
                 # Load from datasets
                 for task_name, (dataset, capacity, _) in st.session_state.datasets.items():
                     unit_processing_times = dataset['unit_processing_time'].values
-                    df.loc[task_name] = unit_processing_times
+                    df.loc[task_name] = np.append(unit_processing_times, capacity)
                     average_performance_per_task += unit_processing_times.mean()
-                    capacities.append(capacity)
 
                 average_performance_per_task /= len(st.session_state.datasets)
                 st.session_state.average_performance_per_task = average_performance_per_task
 
-                df['Capacity'] = capacities
 
                 st.session_state.lp_dataframe = df
                 st.session_state.lp_model_info = None

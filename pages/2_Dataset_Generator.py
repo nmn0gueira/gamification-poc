@@ -1,6 +1,9 @@
 import streamlit as st
+import re
 from packages.dataset_generator.datagen import generate_dataset
 from packages.utils.utils import load_session_state, hide_streamlit_style
+
+PATTERN = r'[0-9\s]'  # Pattern to check if the dataset name contains spaces or numbers
 
 def run_app():
     
@@ -68,8 +71,8 @@ def run_app():
 
 
         if generate_button:  # Handle the click event of the "Generate Dataset" button
-            if dataset_name.__contains__(" "):
-                st.error("Dataset name cannot contain spaces.")
+            if re.search(PATTERN, dataset_name):    # Check if the dataset name contains spaces or numbers
+                st.error("Dataset name cannot contain spaces or numbers.")
                 return
             dataset = generate_dataset(number_of_employees)
             st.session_state.datasets[dataset_name] = (dataset, capacity, task_difficulty)

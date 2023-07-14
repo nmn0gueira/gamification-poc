@@ -1,5 +1,7 @@
 import streamlit as st
 from packages.utils.utils import load_session_state, hide_streamlit_style
+import plotly.express as px
+import pandas as pd
 
 def run_app():
     with st.container():
@@ -10,7 +12,17 @@ def run_app():
         left_column, right_column = st.columns(2)
 
         with left_column:
+            st.subheader("Productivity Leaderboard")
+            if st.session_state.productivity_leaderboard is not None:
+                st.dataframe(st.session_state.productivity_leaderboard)
+            else:
+                st.info("No leaderboard available. Please build the leaderboard.")
+
+        with right_column:
             pass
+
+
+
 
 
     with st.sidebar:
@@ -22,9 +34,24 @@ def run_app():
         left_column, right_column = st.columns(2)
 
         with left_column:
-            pass    # Button to build the playerbase and the leaderboard
+            prod_leaderboard_button = st.button("Build Productivity Leaderboard", use_container_width=True)
+          
+
+            pass    # Button to build the leaderboard (a dataframe with the employees and their points for each task and a total)
         with right_column:
             pass    # Button to randomize the qualitative factors
+
+
+        if prod_leaderboard_button:
+
+            if st.session_state.lp_model_info is None:
+                st.error("Please generate a Linear Programming model first.")
+                return
+                
+            else:
+                df = pd.DataFrame(columns=[task_name for task_name in st.session_state.datasets.keys()] + ["Total Points"])
+
+                st.session_state.productivity_leaderboard = df  
 
 
 if __name__ == "__main__":
