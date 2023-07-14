@@ -18,10 +18,8 @@ def load_session_state():
         st.session_state.average_performance_per_task = 0 # Average productivity per task
         st.session_state.total_pieces = 0 # Total number of pieces
         st.session_state.total_time = 0 # Total time
-
         # Gamification
-        st.session_state.productivity_leaderboard = None # Leaderboard dataframe
-        st.session_state.qualitative_leaderboard = None # Qualitative factors dataframe
+        st.session_state.leaderboards= None # Leaderboards dictionary
 
 
 @st.cache_data

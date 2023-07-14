@@ -18,6 +18,28 @@ CONSTRAINTS = 2
 STATUS = 3
 
 
+def build_dataframe():
+    number_of_employees = len(st.session_state.datasets[st.session_state.selected_dataset][0]) # Each employee is a row in the dataset
+
+    df = pd.DataFrame(columns=["Person " + str(i+1) for i in range(number_of_employees)] + ["Capacity"])
+    df.index.name = "Task"
+
+    average_performance_per_task = 0
+
+    # Create complete dataframe with unit processing times
+    # Load from datasets
+    for task_name, (dataset, capacity, _) in st.session_state.datasets.items():
+        unit_processing_times = dataset['unit_processing_time'].values
+        df.loc[task_name] = np.append(unit_processing_times, capacity)
+        average_performance_per_task += unit_processing_times.mean()
+
+    average_performance_per_task /= len(st.session_state.datasets)
+                
+    st.session_state.average_performance_per_task = average_performance_per_task
+    st.session_state.lp_dataframe = df
+    st.session_state.lp_model_info = None
+
+
 def get_model_info(lp_model):
     # Get the variables and their values
     variables = {task_name : [] for task_name in st.session_state.lp_dataframe.index} # Create a dictionary of lists to store the variables
@@ -217,33 +239,17 @@ def run_app():
             else:
                 st.session_state.lp_changed = False
 
-                number_of_employees = len(st.session_state.datasets[st.session_state.selected_dataset][0]) # Each employee is a row in the dataset
+                build_dataframe()
 
-                df = pd.DataFrame(columns=["Person " + str(i+1) for i in range(number_of_employees)] + ["Capacity"])
-                df.index.name = "Task"
-
-                average_performance_per_task = 0
-
-                # Create complete dataframe with unit processing times
-                # Load from datasets
-                for task_name, (dataset, capacity, _) in st.session_state.datasets.items():
-                    unit_processing_times = dataset['unit_processing_time'].values
-                    df.loc[task_name] = np.append(unit_processing_times, capacity)
-                    average_performance_per_task += unit_processing_times.mean()
-
-                average_performance_per_task /= len(st.session_state.datasets)
-                st.session_state.average_performance_per_task = average_performance_per_task
-
-
-                st.session_state.lp_dataframe = df
-                st.session_state.lp_model_info = None
                 st.experimental_rerun()
+
 
         if solve_button:
             if st.session_state.lp_dataframe is None:   # If the dataframe has not been built, warn the user
                 st.warning("No problem to solve. Please build the dataframe first.")
 
             else:
+                st.session_state.leaderboards = None # Reset the leaderboards
                 st.session_state.lp_model_info = get_model_info(solve_linear_programming(st.session_state.lp_dataframe, min_hours_worked, max_hours_worked))    
                 st.experimental_rerun()
 
