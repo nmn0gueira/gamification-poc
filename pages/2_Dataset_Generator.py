@@ -52,7 +52,7 @@ def run_app():
 
         with left_column:
             default_value = len(st.session_state.datasets[st.session_state.selected_dataset][0]) if st.session_state.datasets else 5
-            number_of_employees = st.number_input("Number of Employees", min_value=1, value=default_value, disabled=st.session_state.disabled)
+            number_of_employees = st.number_input("Number of Employees", min_value=5, value=default_value, disabled=st.session_state.disabled)
         with right_column:
             capacity = st.number_input("Capacity (hrs)", min_value=1, value=600)
 

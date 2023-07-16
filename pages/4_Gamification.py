@@ -3,6 +3,7 @@ from packages.utils.utils import load_session_state, hide_streamlit_style
 import plotly.express as px
 import pandas as pd
 from pandas.api.types import CategoricalDtype
+import numpy as np
 
 # Linear Programming model information
 # OBJECTIVE = 0
@@ -18,6 +19,51 @@ COMBINED = "Combined"
 
 # Ordinal suffixes
 ORDINAL_SUFFIXES = ['st', 'nd', 'rd'] + ['th'] * 17 + ['st', 'nd', 'rd'] + ['th'] * 7 + ['st']
+
+
+# Colors
+GOLD = "#ffd700"
+SILVER = "#c0c0c0"
+BRONZE = "#cd7f32"
+DEFAULT = "#3d85c6"
+
+
+
+def display_leaderboard(df):
+    placements = df.index
+
+    color_discrete_sequence = [DEFAULT]*len(df) # Initialize the color list with the default color
+
+    # Change the color of the first bar to gold
+    color_discrete_sequence[0] = GOLD
+    # Change the color of the second bar to silver
+    color_discrete_sequence[1] = SILVER
+    # Change the color of the third bar to bronze
+    color_discrete_sequence[2] = BRONZE
+
+    fig = px.bar(df,
+                 x="Total Points",
+                 y=placements,
+                 color=placements,  # Use the placements as the color to get the same color for each bar
+                 color_discrete_sequence=color_discrete_sequence,
+                 orientation="h",
+                 text_auto=True,
+                 labels={"Total Points": "Points", "index": "Player"})
+
+    print(fig.data)
+    for i in range(4, placements.size):  # Start from the 4th bar (index 3))):
+        fig.data[i].showlegend = False  # Then, hide legends for the last 6 bars
+
+    # Customize the label for the 4th bar's legend
+    fig.data[3].name = '4th and below'
+
+    # Update the y-axis category order so that the player with the most points is at the top
+    fig.update_layout(yaxis={'categoryorder':'total ascending'})
+    
+    # Update the y-axis labels using the mapping so that the player names are displayed instead of the index
+    fig.update_yaxes(tickvals=[bar.y for bar in fig.data], ticktext=[df["Player"][i] for i in range(len(fig.data))])
+
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def build_productivity_df(points_per_star):
@@ -60,8 +106,39 @@ def build_productivity_df(points_per_star):
 
     return df
 
-def build_qualitative_df():
-    pass
+def build_qualitative_df(min_qualitative_value, max_qualitative_value):
+    # Randomly generate the qualitative values for each employee
+    number_of_players = len(st.session_state.datasets[st.session_state.selected_dataset][0])
+
+    placements = [i for i in range(number_of_players)]
+
+    qualitative_factors = ["Self-assessment", "Engagement"]
+
+    df = pd.DataFrame(index=placements, columns=["Player"] + qualitative_factors)
+
+    df.index.name = "Placement"
+
+    total_points = [0] * number_of_players # Initialized list to store the total points for each player
+
+    for qualitative_factor in qualitative_factors:
+        df[qualitative_factor] = [np.random.randint(min_qualitative_value, max_qualitative_value) for _ in range(number_of_players)]
+        total_points += df[qualitative_factor]
+
+
+    df["Player"] = df.index.copy() + 1  # Add the player column
+
+    df["Total Points"] = total_points      # Add the total points column
+
+    # Sort the dataframe by the total points column
+    df.sort_values(by="Total Points", ascending=False, inplace=True)
+
+    df.reset_index(drop=True, inplace=True)  # Reset the index
+
+    # Convert the index to Ordinal type with the defined suffixes
+    df.index = (df.index+1).to_series().astype(CategoricalDtype(ordered=True)).map(lambda x: f"{x}{ORDINAL_SUFFIXES[x-1]}")
+
+    return df
+
 
 def build_combined_df(productivity_df, qualitative_df, productivity_weight, qualitative_weight):
     pass
@@ -79,24 +156,21 @@ def run_app():
             with left_column:
                 st.subheader("Productivity Leaderboard")
 
-                # Display the dataframe as a table when the user clicks the button
-                with left_column.expander("Display Chart", expanded=False):
-                    st.dataframe(st.session_state.leaderboards[PRODUCTIVITY], use_container_width=True)
+                # Display the dataframe as a table
+                st.dataframe(st.session_state.leaderboards[PRODUCTIVITY], use_container_width=True)
+                
+                # Display the dataframe as a bar chart
+                display_leaderboard(st.session_state.leaderboards[PRODUCTIVITY])                
 
-
-                fig = px.bar(st.session_state.leaderboards[PRODUCTIVITY], x="Total Points", y=st.session_state.leaderboards[PRODUCTIVITY].index, orientation="h", text_auto=True, labels={"Total Points": "Points", "index": "Player"})
-                
-                fig.update_layout(yaxis={'categoryorder':'total ascending'})
-                
-                # Update the y-axis labels using the mapping
-                fig.update_yaxes(tickvals=[y for y in fig.data[0].y], ticktext=[st.session_state.leaderboards[PRODUCTIVITY]["Player"][i] for i in range(len(fig.data[0].y))])
-                
-                st.plotly_chart(fig, use_container_width=True)
-
-                
 
             with right_column:
                 st.subheader("Qualitative Leaderboard")
+
+                # Display the dataframe as a table
+                st.dataframe(st.session_state.leaderboards[QUALITATIVE], use_container_width=True)
+
+                # Display the dataframe as a bar chart
+                display_leaderboard(st.session_state.leaderboards[QUALITATIVE])
                 
                 pass
 
@@ -108,10 +182,26 @@ def run_app():
     with st.sidebar:
         st.header("Gamification")
 
+        st.subheader("Productivity", help="The productivity leaderboard is based on the points earned for each task")
+
         points_per_star = st.number_input("Points per Star", min_value=1, value=10
                                           , help="The points to distribute per star for each task")
         
+        st.markdown("---")
 
+        st.subheader("Qualitative", help="The qualitative leaderboard is randomly generated for each employee based on the minimum and maximum values")
+
+        left_column, right_column = st.columns(2)
+
+        with left_column:
+            min_qualitative_value = st.number_input("Minimum", min_value=0, max_value=100, value=0, step=1)
+
+        with right_column:
+            max_qualitative_value = st.number_input("Maximum", min_value=min_qualitative_value, max_value=100, value=100, step=1)
+
+        st.markdown("---")
+
+        st.subheader("Combined", help="The combined leaderboard is based on the weighted average of the productivity and qualitative values for each task")
         left_column, right_column = st.columns(2)
 
         with left_column:
@@ -134,7 +224,7 @@ def run_app():
 
                 productivity_df = build_productivity_df(points_per_star)
 
-                qualitative_df = build_qualitative_df()
+                qualitative_df = build_qualitative_df(min_qualitative_value, max_qualitative_value)
 
                 combined_df = build_combined_df(productivity_df, qualitative_df, productivity_weight, qualitative_weight)
 
