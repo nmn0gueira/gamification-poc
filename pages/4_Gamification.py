@@ -27,43 +27,37 @@ BRONZE = "#cd7f32"
 DEFAULT = "#3d85c6"
 
 
-def display_leaderboard(df):
-    # Display the dataframe as a table
-    with st.container():
-        st.dataframe(df, use_container_width=True)
+def display_as_bar_chart(df):
+    placements = df.index
 
-    # Display the dataframe as a bar chart
-    with st.container():
-        placements = df.index
+    color_discrete_sequence = [DEFAULT] * len(df)  # Initialize the color list with the default color
 
-        color_discrete_sequence = [DEFAULT] * len(df)  # Initialize the color list with the default color
+    # Change the color of the first bar to gold
+    color_discrete_sequence[0] = GOLD
+    # Change the color of the second bar to silver
+    color_discrete_sequence[1] = SILVER
+    # Change the color of the third bar to bronze
+    color_discrete_sequence[2] = BRONZE
 
-        # Change the color of the first bar to gold
-        color_discrete_sequence[0] = GOLD
-        # Change the color of the second bar to silver
-        color_discrete_sequence[1] = SILVER
-        # Change the color of the third bar to bronze
-        color_discrete_sequence[2] = BRONZE
+    fig = px.bar(df,
+                 x="Total Points",
+                 y=placements,
+                 color=placements,  # Use the placements as the color to get the same color for each bar
+                 color_discrete_sequence=color_discrete_sequence,
+                 orientation="h",
+                 text_auto=True,
+                 labels={"Total Points": "Points", "Placement": "Player"})
 
-        fig = px.bar(df,
-                    x="Total Points",
-                    y=placements,
-                    color=placements,  # Use the placements as the color to get the same color for each bar
-                    color_discrete_sequence=color_discrete_sequence,
-                    orientation="h",
-                    text_auto=True,
-                    labels={"Total Points": "Points", "index": "Player"})
+    for i in range(4, placements.size):  # Start from the 4th bar (index 3))):
+        fig.data[i].showlegend = False  # Then, hide legends for the rest of the placements
 
-        for i in range(4, placements.size):  # Start from the 4th bar (index 3))):
-            fig.data[i].showlegend = False  # Then, hide legends for the last 6 bars
+    # Customize the label for the 4th bar's legend
+    fig.data[3].name = '4th and below'
 
-        # Customize the label for the 4th bar's legend
-        fig.data[3].name = '4th and below'
-        
-        # Update the y-axis labels using the mapping so that the player names are displayed instead of the index
-        fig.update_yaxes(tickvals=[bar.y for bar in fig.data], ticktext=[df["Player"][i] for i in range(len(fig.data))])
+    # Update the y-axis labels using the mapping so that the player names are displayed instead of the index
+    fig.update_yaxes(tickvals=[bar.y for bar in fig.data], ticktext=[df["Player"][i] for i in range(len(fig.data))])
 
-        st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, use_container_height=True)
 
 
 def build_productivity_df(points_per_star):
@@ -80,15 +74,16 @@ def build_productivity_df(points_per_star):
                              if value > 0]
 
         # Sort the list by the processing time
-        task_workers_info.sort(key=lambda x: dataset["unit_processing_time"][x])  # Sort the list by the processing time
+        task_workers_info.sort(key=lambda x: dataset["unit_processing_time"][x])
 
         # Distribute the points to the players
         for i in range(len(task_workers_info)):
             points = int(max_points / (i + 1))  # The points are distributed in a decreasing fashion
+            # Since the index starts from 0, we need to add 1 to the index to get the correct row
             df.loc[task_workers_info[i], task_name] = points
             df.loc[task_workers_info[i], "Total Points"] += points
 
-    df = finalize_leaderboard(df)
+    
 
     return df
 
@@ -106,33 +101,84 @@ def build_qualitative_df(min_qualitative_value, max_qualitative_value):
                                   range(number_of_players)]
         df["Total Points"] += df[qualitative_factor]
         
-    df = finalize_leaderboard(df)
-
     return df
 
 
 def build_combined_df(productivity_df, qualitative_df, productivity_weight, qualitative_weight):
-    pass
+    # Calculate the combined leaderboard
+    number_of_players = len(st.session_state.datasets[st.session_state.selected_dataset][0])
+
+    leaderboards = [PRODUCTIVITY, QUALITATIVE]
+
+    df = create_unordered_empty_leaderboard(number_of_players, leaderboards)
+
+    df[PRODUCTIVITY] = productivity_df["Total Points"].values
+    df[QUALITATIVE] = qualitative_df["Total Points"].values
+    df["Total Points"] = ((df[PRODUCTIVITY] * productivity_weight) + (df[QUALITATIVE] * qualitative_weight)).round()
+
+
+    return df
 
 
 def run_app():
     with st.container():
 
         if st.session_state.leaderboards is not None:
-            # Combined leaderboard goes here
-            st.header("Leaderboards")
+            with st.container():
+                st.header("Final Leaderboard")
 
-            left_column, right_column = st.columns(2)
+                table_column, chart_column = st.columns((1.25, 1), gap="large")
 
-            with left_column:
-                st.subheader("Productivity Leaderboard")
+                with table_column:
+                    st.markdown("##")   # Add some space to align the table with the chart
+                    st.markdown("##")
+                    # Display the dataframe as a table
+                    st.dataframe(st.session_state.leaderboards[COMBINED], use_container_width=True)
 
-                display_leaderboard(st.session_state.leaderboards[PRODUCTIVITY])
+                with chart_column:
+                    # Display the dataframe as a bar chart
+                    display_as_bar_chart(st.session_state.leaderboards[COMBINED])
 
-            with right_column:
-                st.subheader("Qualitative Leaderboard")
-       
-                display_leaderboard(st.session_state.leaderboards[QUALITATIVE])
+                st.markdown("---")
+
+
+            with st.container():
+
+                left_column, right_column = st.columns(2, gap="large")
+
+                with left_column:
+                    st.subheader("Productivity Leaderboard")
+
+                    weight_column, points_column = st.columns(2)
+
+                    with weight_column:
+                        st.write("Weight: " + str(int(st.session_state.qualitative_weight * 100)) + "%")
+
+                    with points_column:
+                        st.write("Points per Star: " + str(st.session_state.points_per_star))
+
+                    # Display the dataframe as a table
+                    st.dataframe(st.session_state.leaderboards[PRODUCTIVITY], use_container_width=True)
+
+                    # Display the dataframe as a bar chart
+                    display_as_bar_chart(st.session_state.leaderboards[PRODUCTIVITY])
+
+                with right_column:
+                    st.subheader("Qualitative Leaderboard")
+
+                    weight_column, range_column = st.columns(2)
+
+                    with weight_column:
+                        st.write("Weight: " + str(int(st.session_state.qualitative_weight * 100))  + "%")
+
+                    with range_column:
+                        st.write("Value range: " + str(st.session_state.min_qualitative_value) + " - " + str(st.session_state.max_qualitative_value))
+
+                    # Display the dataframe as a table
+                    st.dataframe(st.session_state.leaderboards[QUALITATIVE], use_container_width=True)
+        
+                    # Display the dataframe as a bar chart
+                    display_as_bar_chart(st.session_state.leaderboards[QUALITATIVE])
 
         else:
             st.info("No leaderboards available. Please create the leaderboards.")
@@ -144,8 +190,6 @@ def run_app():
 
         points_per_star = st.number_input("Points per Star", min_value=1, value=10
                                           , help="The points to distribute per star for each task")
-
-        st.markdown("---")
 
         st.subheader("Qualitative",
                      help="The qualitative leaderboard is randomly generated for each employee based on the minimum and maximum values")
@@ -159,10 +203,10 @@ def run_app():
             max_qualitative_value = st.number_input("Maximum", min_value=min_qualitative_value, max_value=100,
                                                     value=100, step=1)
 
-        st.markdown("---")
 
-        st.subheader("Combined",
-                     help="The combined leaderboard is based on the weighted average of the productivity and qualitative values for each task")
+        st.subheader("Final",
+                     help="The final leaderboard is based on the weighted average of the productivity and qualitative values for each task")
+        
         left_column, right_column = st.columns(2)
 
         with left_column:
@@ -188,9 +232,19 @@ def run_app():
 
                 combined_df = build_combined_df(productivity_df, qualitative_df, productivity_weight,
                                                 qualitative_weight)
+                
+                st.session_state.points_per_star = points_per_star
 
-                st.session_state.leaderboards = {PRODUCTIVITY: productivity_df, QUALITATIVE: qualitative_df,
-                                                 COMBINED: combined_df}
+                st.session_state.min_qualitative_value = min_qualitative_value
+
+                st.session_state.max_qualitative_value = max_qualitative_value
+
+                st.session_state.productivity_weight = productivity_weight
+
+                st.session_state.qualitative_weight = qualitative_weight
+
+                st.session_state.leaderboards = {PRODUCTIVITY: finalize_leaderboard(productivity_df), QUALITATIVE: finalize_leaderboard(qualitative_df),
+                                                 COMBINED: finalize_leaderboard(combined_df)}
 
                 st.experimental_rerun()
 

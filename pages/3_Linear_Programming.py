@@ -134,10 +134,10 @@ def display_model():
         left_column, right_column = st.columns(2)
 
         with left_column:
-            st.plotly_chart(fig_variables, use_container_width=True)
+            st.plotly_chart(fig_variables, use_container_width=True, use_container_height=True)
 
         with right_column:  # Display the values of the variables in a table
-            st.markdown("##")
+            st.markdown("##")   # Add some space to align the table with the bar chart
             st.dataframe(variables_df, use_container_width=True)
 
             

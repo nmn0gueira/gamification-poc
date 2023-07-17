@@ -40,8 +40,7 @@ def get_unit_processing_time(units_processed, number_of_defects, total_labor_hou
 
 def generate_dataset(number_of_employees):
 
-    data = {'employee_id': [],
-            'units_processed': [],
+    data = {'units_processed': [],
             'number_of_defects': [],
             'total_labor_hours': [],
             'efficiency_factor': [],
@@ -49,10 +48,12 @@ def generate_dataset(number_of_employees):
             'unit_processing_time': [],
             'productivity': []      # for debug purposes
             }
+    
+    index = []
 
     for i in range(number_of_employees):
         # Variables
-        employee_id = i + 1
+        index.append(i)
 
         units_processed = random.randint(MIN_UNITS_PROCESSED, MAX_UNITS_PROCESSED)
 
@@ -72,7 +73,6 @@ def generate_dataset(number_of_employees):
         productivity = get_productivity(units_processed, number_of_defects, total_labor_hours, efficiency_factor)
         
         # Add to dataframe
-        data['employee_id'].append(employee_id)
         data['units_processed'].append(units_processed)
         data['number_of_defects'].append(number_of_defects)
         data['total_labor_hours'].append(total_labor_hours)
@@ -84,4 +84,7 @@ def generate_dataset(number_of_employees):
     # pd.DataFrame(data).to_csv(csv_name, index=False)
     print("Dataset generated successfully!")
 
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data, index=index)
+    df.index.name = "employee_id"
+
+    return df
