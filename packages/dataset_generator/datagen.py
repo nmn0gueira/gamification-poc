@@ -46,7 +46,7 @@ def generate_dataset(number_of_employees):
             'efficiency_factor': [],
             # 'quality_factor': [],    # for debug purposes
             'unit_processing_time': [],
-            'productivity': []      # for debug purposes
+            # 'productivity': []      # for debug purposes
             }
     
     index = []
@@ -70,7 +70,7 @@ def generate_dataset(number_of_employees):
 
         unit_processing_time = get_unit_processing_time(units_processed, number_of_defects, total_labor_hours, efficiency_factor)
 
-        productivity = get_productivity(units_processed, number_of_defects, total_labor_hours, efficiency_factor)
+        # productivity = get_productivity(units_processed, number_of_defects, total_labor_hours, efficiency_factor)
         
         # Add to dataframe
         data['units_processed'].append(units_processed)
@@ -79,7 +79,7 @@ def generate_dataset(number_of_employees):
         data['efficiency_factor'].append(efficiency_factor)
         # data['quality_factor'].append(quality_factor)
         data['unit_processing_time'].append(unit_processing_time)
-        data['productivity'].append(productivity)
+        # data['productivity'].append(productivity)
 
     # pd.DataFrame(data).to_csv(csv_name, index=False)
     print("Dataset generated successfully!")

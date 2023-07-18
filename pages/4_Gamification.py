@@ -6,10 +6,10 @@ import numpy as np
 from packages.gamification.leaderboards import create_unordered_empty_leaderboard, finalize_leaderboard
 
 # Linear Programming model information
-# OBJECTIVE = 0
-VARIABLES = 1
-# CONSTRAINTS = 2
-# STATUS = 3
+# STATUS = 0
+# OBJECTIVE = 1
+VARIABLES = 2
+# CONSTRAINTS = 3
 
 
 # Leaderboards
@@ -17,8 +17,6 @@ PRODUCTIVITY = "Productivity"
 QUALITATIVE = "Qualitative"
 COMBINED = "Combined"
 
-# Ordinal suffixes
-ORDINAL_SUFFIXES = ['st', 'nd', 'rd'] + ['th'] * 17 + ['st', 'nd', 'rd'] + ['th'] * 7 + ['st']
 
 # Colors
 GOLD = "#ffd700"
@@ -186,6 +184,19 @@ def run_app():
     with st.sidebar:
         st.header("Gamification")
 
+        st.subheader("Final",
+                     help="The final leaderboard is based on the weighted average of the productivity and qualitative values")
+        
+        left_column, right_column = st.columns(2)
+
+        with left_column:
+            productivity_weight = st.number_input("Productivity Weight", min_value=0.0, max_value=1.0, value=0.5,
+                                                  step=0.1)
+
+        with right_column:
+            qualitative_weight = st.number_input("Qualitative Weight", value=1 - productivity_weight, disabled=True)
+
+
         st.subheader("Productivity", help="The productivity leaderboard is based on the points earned for each task")
 
         points_per_star = st.number_input("Points per Star", min_value=1, value=10
@@ -203,18 +214,6 @@ def run_app():
             max_qualitative_value = st.number_input("Maximum", min_value=min_qualitative_value, max_value=100,
                                                     value=100, step=1)
 
-
-        st.subheader("Final",
-                     help="The final leaderboard is based on the weighted average of the productivity and qualitative values for each task")
-        
-        left_column, right_column = st.columns(2)
-
-        with left_column:
-            productivity_weight = st.number_input("Productivity Weight", min_value=0.0, max_value=1.0, value=0.5,
-                                                  step=0.1)
-
-        with right_column:
-            qualitative_weight = st.number_input("Qualitative Weight", value=1 - productivity_weight, disabled=True)
 
         leaderboards_button = st.button("Create Leaderboards", use_container_width=True)
 

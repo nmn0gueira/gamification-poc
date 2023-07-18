@@ -12,10 +12,10 @@ MIN_EMPLOYEE_CAPACITY = "min_employee_capacity"
 MAX_EMPLOYEE_CAPACITY = "max_employee_capacity"
 
 # Linear Programming model information
-OBJECTIVE = 0
-VARIABLES = 1
-CONSTRAINTS = 2
-STATUS = 3
+STATUS = 0
+OBJECTIVE = 1
+VARIABLES = 2
+CONSTRAINTS = 3
 
 
 def build_dataframe():
@@ -78,7 +78,7 @@ def get_model_info(lp_model):
 
     st.session_state.total_time = int(hours_worked)
 
-    return lp_model.objective, variables, constraints, lp_model.status
+    return lp_model.status, lp_model.objective, variables, constraints
 
 
 

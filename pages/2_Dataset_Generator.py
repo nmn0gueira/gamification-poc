@@ -36,7 +36,7 @@ def run_app():
 
             st.markdown("##")
 
-            st.dataframe(st.session_state.datasets[st.session_state.selected_dataset][0])   # Display the selected dataset
+            st.dataframe(st.session_state.datasets[st.session_state.selected_dataset][0], use_container_width=True)   # Display the selected dataset
 
         else:
             # No datasets available
