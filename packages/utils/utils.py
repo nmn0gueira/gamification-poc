@@ -1,5 +1,5 @@
 import streamlit as st
-import requests
+import json
 
 
 def load_session_state():
@@ -28,11 +28,9 @@ def load_session_state():
 
 
 @st.cache_data
-def load_lottieurl(url):
-    r = requests.get(url)
-    if r.status_code != 200:
-        return None
-    return r.json()
+def load_lottiefile(filepath: str):
+    with open(filepath, "r") as f:
+        return json.load(f)
 
 # Use local CSS
 def local_css(file_name):

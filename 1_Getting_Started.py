@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_lottie import st_lottie
-from packages.utils.utils import load_session_state, hide_streamlit_style, load_lottieurl
+from packages.utils.utils import load_session_state, hide_streamlit_style, load_lottiefile
 
 
 
@@ -41,7 +41,7 @@ def run_app():
 
         st.markdown("##")
 
-        left_column, right_column = st.columns(2)
+        left_column, right_column = st.columns((1.75,1))
         with left_column:
             st.write(
                 """
@@ -57,7 +57,7 @@ def run_app():
             
         with right_column:
             # Put other lottie file here
-            st_lottie(lottie_coding, speed=1, height=300, key="lottie_coding")
+            st_lottie(lottie_datagen, speed=1, height=300, key="lottie_datagen")
             
 
     # ---- LINEAR PROGRAMMING ----
@@ -66,8 +66,6 @@ def run_app():
         st.header("Linear Programming")
 
         st.info("Before you can solve an LP model, you need to have generated datasets")
-
-        st.markdown("##")
 
         st.write(
             """
@@ -136,18 +134,82 @@ def run_app():
             """
         )
 
+        st.warning("Currently, the app uses a publicly available solver. The higher the number of employees and tasks, the longer it will take to solve the model.")
+
     # ---- GAMIFICATION ----
     with st.container():
         st.markdown("---")
         st.header("Gamification")
         st.info ("Before you can use the gamification component, you need to have a solved LP model")
-        st.markdown("##")
 
         st.write(
             """
             This component allows you to create leaderboards with automatic point assignment based on how well the employees performed their tasks.
             """
         )
+
+        left_column, right_column = st.columns((1.25,1))
+
+        with left_column:
+            st.subheader("How an employee gets his classification")
+            st.write(
+                """
+                The final classification of an employee is based on aspects from the productivity
+                and qualitative leaderboards. Their total score is equal to the following formula,
+                with w1 being the weight of the productivity score and w2 being the weight of the
+                qualitative score:
+                ```
+                Total Score = Productivity Score * w1 + Qualitative Score * w2
+                ```
+                """
+            )
+        
+        with right_column:
+            st.markdown("##")
+            # Put other lottie file here
+            st_lottie(lottie_gamification, speed=0.5, height=200, key="lottie_gamification")
+
+        st.markdown("##")
+
+
+        productivity_column, qualitative_column = st.columns(2)
+
+        with productivity_column:
+            st.subheader("Productivity leaderboard")
+            st.write(
+                """
+                The productivity leaderboard takes the input of points per star to determine the 
+                amount of points to distribute to each employee given a certain task's difficulty rating.
+
+                The employees that worked on a given task will have points distributed to them based on
+                their efficiency (unit processing time) and the task's difficulty rating.
+
+                For example, if the task's difficulty rating is 5 and the points per star factor is 10, then
+                the employee that worked the fastest will get 50 points, the second fastest will get 50/2 = 25 points,
+                the third fastest will get 50/3 = 16.6 points which rounds to 17, and so on and so forth.
+
+                The total score of each employee in this leaderboard is equal to the sum of all points they got from the tasks they worked on.
+
+                """
+            )
+
+        with qualitative_column:
+            st.subheader("Qualitative leaderboard")
+            st.write(
+                """
+                The qualitative leaderboard is randomized and takes the input of the minimum and
+                maximum qualitative values to determine the range of values to distribute to each employee.
+
+                This leaderboard is meant to represent the qualitative aspects of the employees,
+                such as their attitude, punctuality, etc. The qualitative aspects chosen for now were "Self-assessment" which
+                represents how well the employee thinks he did versus how well he actually did (the lower the difference, the better),
+                and "Engagement" which represents how engaged the employee was during the task (the higher the better).
+
+                The total score of each employee in this leaderboard is equal to the sum of all qualitative values they got from the tasks they worked on.
+                """
+            )
+        
+
 
 
 
@@ -163,9 +225,11 @@ def run_app():
 
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="Home", page_icon=":house:", layout="wide")
+    st.set_page_config(page_title="Getting Started", page_icon=":rocket:", layout="wide")
 
-    lottie_coding = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_fcfjwiyb.json")
+    lottie_datagen= load_lottiefile("lottiefiles/datagen1.json")
+
+    lottie_gamification = load_lottiefile("lottiefiles/gamification2.json")
 
     # Load session state
     load_session_state()
