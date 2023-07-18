@@ -21,10 +21,10 @@ def load_session_state():
         # Gamification
         st.session_state.leaderboards= None # Leaderboards dictionary
         st.session_state.points_per_star = 0 # Points per star selected
-        st.session_state.min_qualitative_value = 0 # Minimum qualitative value selected
-        st.session_state.max_qualitative_value = 0 # Maximum qualitative value selected
-        st.session_state.productivity_weight = 0 # Productivity weight selected
-        st.session_state.qualitative_weight = 0 # Qualitative weight selected
+        st.session_state.min_qualitative_value = 0 # Minimum qualitative value selected displayed
+        st.session_state.max_qualitative_value = 0 # Maximum qualitative value selected displayed
+        st.session_state.productivity_weight = 0 # Productivity weight selected displayed
+        st.session_state.qualitative_weight = 0 # Qualitative weight selected displayed
 
 
 @st.cache_data
