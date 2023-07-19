@@ -211,8 +211,8 @@ def run_app():
 
                 This leaderboard is meant to represent the qualitative aspects of the employees,
                 such as their attitude, punctuality, etc. The qualitative aspects chosen for now were "Self vs Supervisor assessment" which
-                represents how well the employee thinks he did versus how well he actually did (the lower the difference, the better),
-                and "Engagement" which represents how engaged the employee was during the task (the higher the better).
+                represents how well the employee thinks he worked versus how well he actually did (the lower the difference, the better),
+                and "Engagement" which represents how engaged the employee was during their work (the higher the better).
 
                 The total score of each employee in this leaderboard is equal to the sum of all qualitative values they got from the tasks they worked on.
                 """
