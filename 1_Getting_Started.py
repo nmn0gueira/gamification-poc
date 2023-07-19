@@ -35,9 +35,17 @@ def run_app():
             - Units processed
             - Hours worked
             - Efficiency factor (factors in time spent on breaks, lunch, etc.)
-            - Unit processing time (time it takes to process one unit)
+            - Unit processing time (time it takes to process one unit with no defects)
             """
         )
+
+        st.write(
+            """
+            The formula used to calculate the unit processing time is the following:
+            ```
+            Unit Processing Time = Hours Worked * Efficiency Factor / (Units Processed - Number of Defects)
+            ```
+            """)
 
         st.markdown("##")
 
