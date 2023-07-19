@@ -20,6 +20,9 @@ SOLUTION_TIME = 4
 
 
 def build_dataframe():
+    """
+    Build the dataframe with the unit processing times
+    """
     number_of_employees = st.session_state.number_of_employees
 
     df = pd.DataFrame(columns=["Employee " + str(i) for i in range(number_of_employees)] + ["Capacity"])
@@ -36,6 +39,12 @@ def build_dataframe():
 
 
 def get_model_info(lp_model):
+    """
+    Get the information of the linear programming model
+    :param lp_model: The linear programming model
+    :return: The status, objective function, variables, constraints and solution time
+    """
+
     # Get the variables and their values
     variables = {task_name : [] for task_name in st.session_state.lp_dataframe.index} # Create a dictionary of lists to store the variables
     for variable in lp_model.variables():
@@ -49,7 +58,7 @@ def get_model_info(lp_model):
 
     number_of_tasks = len(st.session_state.lp_dataframe)
 
-    # Related to the number of tasks executed being equal between machines
+    # Related to the number of tasks executed being equal between machines (only if there is more than 1 task)
     equality_constraints = constraints[0:number_of_tasks-1]
 
     # Related to the unit processing times from the dataframe
@@ -67,6 +76,7 @@ def get_model_info(lp_model):
     # Store the total pieces produced and the total hours worked
     # The total number of pieces produced is the value of the objective function divided by the number of tasks
     st.session_state.total_pieces = int(lp_model.objective.value()/number_of_tasks)
+    
     hours_worked = 0
     for constraint in min_employee_capacity_constraints: # Same as using max_employee_capacity_constraints
         hours_worked += constraint.value() - constraint.constant
@@ -78,7 +88,11 @@ def get_model_info(lp_model):
 
 
 def display_model():
-   
+    """
+    Display the linear programming model information
+    """
+    
+    # Display the total pieces produced and the total hours worked
     with st.container():
         left_column, right_column = st.columns(2)
 
@@ -208,7 +222,7 @@ def run_app():
                         display_model()
                     case Status.INFEASIBLE:
                         st.error("Infeasible Problem")
-                        st.info("Make sure the minimum hours worked is not too high.")
+                        st.info("Make sure the constraints selected are valid")
                     case Status.UNBOUNDED:
                         st.error("Unbounded Problem")
                     case Status.UNDEFINED:
@@ -235,6 +249,7 @@ def run_app():
         with right_column:
             solve_button = st.button("Solve LP model")
 
+        # Display the time elapsed if the model has been solved
         if st.session_state.lp_model_info is not None and st.session_state.lp_model_info[STATUS] == Status.OPTIMAL:
             st.markdown("---")
             st.subheader("Total time elapsed")

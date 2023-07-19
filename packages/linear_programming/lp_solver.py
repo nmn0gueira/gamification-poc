@@ -1,6 +1,9 @@
 from pulp import *
 
 class Status:
+    """
+    Class to represent the status of the linear programming model
+    """
     NOT_SOLVED = 0
     OPTIMAL = 1
     INFEASIBLE = -1

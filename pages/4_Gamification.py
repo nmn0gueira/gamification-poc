@@ -9,7 +9,7 @@ from packages.gamification.leaderboards import create_unordered_empty_leaderboar
 # OBJECTIVE = 1
 VARIABLES = 2
 # CONSTRAINTS = 3
-# SOLUTION TIME = 4
+# SOLUTION_TIME = 4
 
 
 # Leaderboards
@@ -23,6 +23,10 @@ GOLD = "#ffd700"
 SILVER = "#c0c0c0"
 BRONZE = "#cd7f32"
 DEFAULT = "#3d85c6"
+
+
+# Randomized factors
+QUALITATIVE_FACTORS = ["Self vs Supervisor assess.", "Engagement"]
 
 
 def display_as_bar_chart(df):
@@ -59,6 +63,11 @@ def display_as_bar_chart(df):
 
 
 def build_productivity_df(points_per_star):
+    """
+    Builds the productivity leaderboard dataframe
+    :param points_per_star: The points to distribute per star for each task
+    :return: The productivity leaderboard dataframe
+    """
     number_of_players = st.session_state.number_of_employees
     tasks = [task_name for task_name in st.session_state.datasets.keys()]
     df = create_unordered_empty_leaderboard(number_of_players, tasks)
@@ -85,14 +94,19 @@ def build_productivity_df(points_per_star):
 
 
 def build_qualitative_df(min_qualitative_value, max_qualitative_value):
+    """
+    Builds the qualitative leaderboard dataframe
+    :param min_qualitative_value: The minimum qualitative value
+    :param max_qualitative_value: The maximum qualitative value
+    :return: The qualitative leaderboard dataframe
+    """
+
     # Randomly generate the qualitative values for each employee
     number_of_players = st.session_state.number_of_employees
 
-    qualitative_factors = ["Self vs Supervisor assess.", "Engagement"]
+    df = create_unordered_empty_leaderboard(number_of_players, QUALITATIVE_FACTORS)
 
-    df = create_unordered_empty_leaderboard(number_of_players, qualitative_factors)
-
-    for qualitative_factor in qualitative_factors:
+    for qualitative_factor in QUALITATIVE_FACTORS:
         df[qualitative_factor] = [np.random.randint(min_qualitative_value, max_qualitative_value) for _ in
                                   range(number_of_players)]
         df["Total Points"] += df[qualitative_factor]
@@ -101,6 +115,15 @@ def build_qualitative_df(min_qualitative_value, max_qualitative_value):
 
 
 def build_combined_df(productivity_df, qualitative_df, productivity_weight, qualitative_weight):
+    """
+    Builds the combined leaderboard dataframe
+    :param productivity_df: The productivity leaderboard dataframe
+    :param qualitative_df: The qualitative leaderboard dataframe
+    :param productivity_weight: The productivity weight
+    :param qualitative_weight: The qualitative weight
+    :return: The combined leaderboard dataframe
+    """
+
     # Calculate the combined leaderboard
     number_of_players = st.session_state.number_of_employees
 
@@ -112,13 +135,12 @@ def build_combined_df(productivity_df, qualitative_df, productivity_weight, qual
     df[QUALITATIVE] = qualitative_df["Total Points"].values
     df["Total Points"] = ((df[PRODUCTIVITY] * productivity_weight) + (df[QUALITATIVE] * qualitative_weight)).round()
 
-
     return df
 
 
 def run_app():
+    # Main content
     with st.container():
-
         if st.session_state.leaderboards is not None:
             with st.container():
                 st.header("Final Leaderboard")
@@ -179,6 +201,7 @@ def run_app():
         else:
             st.info("No leaderboards available. Please create the leaderboards.")
 
+    # Sidebar content
     with st.sidebar:
         st.header("Gamification")
 
@@ -217,11 +240,11 @@ def run_app():
 
         if leaderboards_button:
 
-            if st.session_state.lp_model_info is None:
+            if st.session_state.lp_model_info is None:  # No LP model available
                 st.error("Please generate a Linear Programming model first.")
                 return
 
-            else:
+            else:   # LP model available
 
                 productivity_df = build_productivity_df(points_per_star)
 

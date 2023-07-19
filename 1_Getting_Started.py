@@ -21,9 +21,11 @@ def run_app():
         st.write("Get started by exploring how the app works.")
 
 
+    st.write("---")
+
     # ---- DATASET GENERATOR ----
     with st.container():
-        st.write("---")
+        
         
         st.header("Dataset Generator")
         st.write(
@@ -67,9 +69,10 @@ def run_app():
             st_lottie(lottie_datagen, speed=1, height=300, key="lottie_datagen")
             
 
+    st.markdown("---")
+
     # ---- LINEAR PROGRAMMING ----
     with st.container():
-        st.markdown("---")
         st.header("Linear Programming")
 
         st.info("Before you can solve an LP model, you need to have generated datasets")
@@ -143,9 +146,11 @@ def run_app():
 
         st.warning("Currently, the app uses a publicly available solver. The higher the number of employees and tasks, the longer it will take to solve the model.")
 
+
+    st.markdown("---")
+
     # ---- GAMIFICATION ----
     with st.container():
-        st.markdown("---")
         st.header("Gamification")
         st.info ("Before you can use the gamification component, you need to have a solved LP model")
 

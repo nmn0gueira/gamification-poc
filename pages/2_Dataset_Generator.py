@@ -3,6 +3,10 @@ import re
 from packages.dataset_generator.datagen import generate_dataset
 from packages.utils.utils import load_session_state, hide_streamlit_style
 
+DATASET = 0
+CAPACITY = 1
+TASK_DIFFICULTY = 2
+
 PATTERN = r'[0-9\s]'  # Pattern to check if the dataset name contains spaces or numbers
 
 def run_app():
@@ -13,6 +17,7 @@ def run_app():
 
             st.markdown("##")
 
+            # Disable the number input so the user cant change the number of employees if datasets are available
             st.session_state.disabled = True
 
             dataset_names = list(st.session_state.datasets.keys())
@@ -26,16 +31,16 @@ def run_app():
 
             with left_column:
                 st.subheader("Dataset Information")
-                st.markdown(f"**Number of Employees:** {len(st.session_state.datasets[st.session_state.selected_dataset][0])}")
+                st.markdown(f"**Number of Employees:** {st.session_state.number_of_employees}")
 
             with right_column:
                 st.subheader("Dataset Settings")
-                st.markdown(f"**Capacity:** {st.session_state.datasets[st.session_state.selected_dataset][1]} hours")
-                st.markdown(f"**Task Difficulty:** {':star:'* st.session_state.datasets[st.session_state.selected_dataset][2]}")
+                st.markdown(f"**Capacity:** {st.session_state.datasets[st.session_state.selected_dataset][CAPACITY]} hours")
+                st.markdown(f"**Task Difficulty:** {':star:'* st.session_state.datasets[st.session_state.selected_dataset][TASK_DIFFICULTY]}")
 
             st.markdown("##")
 
-            st.dataframe(st.session_state.datasets[st.session_state.selected_dataset][0], use_container_width=True)   # Display the selected dataset
+            st.dataframe(st.session_state.datasets[st.session_state.selected_dataset][DATASET], use_container_width=True)   # Display the selected dataset
 
         else:
             # No datasets available
@@ -50,8 +55,11 @@ def run_app():
         left_column, right_column = st.columns(2)
 
         with left_column:
-            default_value = len(st.session_state.datasets[st.session_state.selected_dataset][0]) if st.session_state.datasets else 5
+            # Used so that the page remembers the number of employees if datasets were generated before
+            default_value = st.session_state.number_of_employees if st.session_state.datasets else 5 
+
             number_of_employees = st.number_input("Number of Employees", min_value=5, value=default_value, disabled=st.session_state.disabled)
+        
         with right_column:
             capacity = st.number_input("Capacity (hrs)", min_value=1, value=600)
 
@@ -65,6 +73,7 @@ def run_app():
         
         with left_column:
             delete_selected_button = st.button("Delete Selected", use_container_width=True)
+
         with right_column:
             delete_all_button = st.button("Delete All", use_container_width=True)
 
@@ -72,31 +81,35 @@ def run_app():
         if generate_button:  # Handle the click event of the "Generate Dataset" button
             if re.search(PATTERN, dataset_name):    # Check if the dataset name contains spaces or numbers
                 st.error("Dataset name cannot contain spaces or numbers.")
-                return
-            dataset = generate_dataset(number_of_employees)
-            st.session_state.number_of_employees = number_of_employees
-            st.session_state.datasets[dataset_name] = (dataset, capacity, task_difficulty)
-            st.session_state.selected_dataset = dataset_name  # Update the selected dataset
-            st.session_state.lp_changed = True
-            st.experimental_rerun()  # Rerun the app to update the dataset selectbox
+                
+            else:
+                dataset = generate_dataset(number_of_employees)
+                st.session_state.number_of_employees = number_of_employees
+                st.session_state.datasets[dataset_name] = (dataset, capacity, task_difficulty)
+                st.session_state.selected_dataset = dataset_name  # Update the selected dataset
+                st.session_state.lp_changed = True
+                st.experimental_rerun()  # Rerun the app to update the dataset selectbox
 
 
         if delete_selected_button:  # Handle the click event of the "Delete Selected Dataset" button
-            if not st.session_state.datasets:
+            if not st.session_state.datasets:   # Check if there are datasets to delete
                 st.warning("No datasets to delete.")
             else:
                 del st.session_state.datasets[st.session_state.selected_dataset]
 
-                if st.session_state.datasets:
+                if st.session_state.datasets:   # Check if there are still datasets left
+                    # Update the selected dataset to the first dataset in the dictionary
                     st.session_state.selected_dataset = list(st.session_state.datasets.keys())[0]
+                    
                     st.sessions_state.lp_changed = True
+
                 else:
                     st.session_state.selected_dataset = None
             
                 st.experimental_rerun()  # Rerun the app to update the dataset selectbox
 
         if delete_all_button:  # Handle the click event of the "Delete All Datasets" button
-            if not st.session_state.datasets:
+            if not st.session_state.datasets:   # Check if there are datasets to delete
                 st.warning("No datasets to delete.")
             else:  
                 st.session_state.datasets.clear()  # Clear the datasets dictionary

@@ -13,6 +13,11 @@ EFFICIENCY_FACTOR_MIN = 0.8
 EFFICIENCY_FACTOR_MAX = 1.0
 
 def get_business_days(leave_days=None):
+    """
+    Returns the number of business days in the current month
+    :param leave_days: The days that the employee is on leave
+    :return: The number of business days
+    """
     if leave_days is None:
         leave_days = []
     now = datetime.datetime.now()
@@ -39,7 +44,6 @@ def get_unit_processing_time(units_processed, number_of_defects, total_labor_hou
     return (total_labor_hours * efficiency_factor) / (units_processed - number_of_defects)
 
 def generate_dataset(number_of_employees):
-
     data = {'units_processed': [],
             'number_of_defects': [],
             'total_labor_hours': [],
