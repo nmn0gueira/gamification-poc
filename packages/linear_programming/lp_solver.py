@@ -1,4 +1,3 @@
-import pandas as pd
 from pulp import *
 
 class Status:
@@ -9,7 +8,14 @@ class Status:
     UNDEFINED = -3
 
 
-def solve_linear_programming(dataframe: pd.DataFrame, min_hours_worked: int, max_hours_worked: int) -> LpProblem:
+def solve_linear_programming(dataframe, min_hours_worked, max_hours_worked):
+    """
+    Solves the linear programming problem
+    :param dataframe: The dataframe with the unit processing times
+    :param min_hours_worked: The minimum hours worked by an employee
+    :param max_hours_worked: The maximum hours worked by an employee
+    :return: The linear programming model
+    """
 
     variables = {task_name : [] for task_name in dataframe.index} # Create a dictionary of lists to store the variables
     number_of_employees = len(dataframe.columns) - 1
@@ -21,7 +27,7 @@ def solve_linear_programming(dataframe: pd.DataFrame, min_hours_worked: int, max
     # Create variables
     for key in variables:   # For each task
         for i in range(number_of_employees):    # For each employee
-            variables[key].append(LpVariable("X" + key + str(i+1), lowBound=0, cat=LpInteger))   # Create variable
+            variables[key].append(LpVariable("X" + key + str(i), lowBound=0, cat=LpInteger))   # Create variable
 
 
     # Define objective

@@ -5,7 +5,7 @@ from packages.utils.utils import load_session_state, hide_streamlit_style, load_
 
 
 def run_app():
-    # ---- HEADER SECTION ----
+    # ---- INTRODUCTION ----
     with st.container():
         st.subheader("Introduction")
         st.title("Improving Productivity Through Gamification")
@@ -16,7 +16,7 @@ def run_app():
                  It allows you to:
                  - generate datasets for workable employee data.
                  - solve linear programming models to see how to better organize employees between various tasks. 
-                 - gamify the process by assigning points to each task and employee, and then displaying the results in leaderboards.""")
+                 - gamify the job process by assigning points to each task and employee, and then displaying the results in leaderboards.""")
         
         st.write("Get started by exploring how the app works.")
 
@@ -26,7 +26,6 @@ def run_app():
         st.write("---")
         
         st.header("Dataset Generator")
-        st.markdown("##")
         st.write(
             """
             This component allows you to create, manage and delete datasets for workable employee data.

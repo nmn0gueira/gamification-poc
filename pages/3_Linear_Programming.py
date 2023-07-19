@@ -22,7 +22,7 @@ SOLUTION_TIME = 4
 def build_dataframe():
     number_of_employees = st.session_state.number_of_employees
 
-    df = pd.DataFrame(columns=["Person " + str(i+1) for i in range(number_of_employees)] + ["Capacity"])
+    df = pd.DataFrame(columns=["Employee " + str(i) for i in range(number_of_employees)] + ["Capacity"])
     df.index.name = "Task"
 
     # Create complete dataframe with unit processing times
@@ -100,26 +100,42 @@ def display_model():
 
     st.markdown("##")
     
-    # Display the variables and their values in a bar chart per task
+    # Display the variables and their values in a bar chart and a table
     with st.container():
         st.subheader("Variables")
 
         variables = st.session_state.lp_model_info[VARIABLES]
         
-        task = st.selectbox("Select a task", list(variables.keys()))
-        variables_df = pd.DataFrame(variables[task], columns=["Pieces Processed"])
-        variables_df.index += 1    # Add 1 to the index to start at 1 instead of 0
-        variables_df.index.name = "Person"
+        options = ["All Tasks"] + list(variables.keys())
+        option = st.selectbox("Select an option", options)
 
-        fig_variables = px.bar(
-            variables_df,
-            x=variables_df.index,
-            y="Pieces Processed",
-            orientation="v",
-            color_discrete_sequence=["#636EFA"] * len(variables_df),
-            template="plotly_white",
-            )
-        
+        if option == "All Tasks":
+            variables_df = pd.DataFrame(variables, columns=variables.keys())
+            variables_df.index.name = "Employee ID"
+
+            fig_variables = px.bar(
+                variables_df,
+                x=variables_df.index,
+                y=variables_df.columns,
+                orientation="v",
+                template="plotly_white",
+                barmode="stack",
+                labels={"value": "Pieces Processed"}
+                )
+            
+        else:
+            variables_df = pd.DataFrame(variables[option], columns=["Pieces Processed"])
+            variables_df.index += 1    # Add 1 to the index to start at 1 instead of 0
+            variables_df.index.name = "Employee ID"
+
+            fig_variables = px.bar(
+                variables_df,
+                x=variables_df.index,
+                y="Pieces Processed",
+                orientation="v",
+                template="plotly_white",
+                )
+            
         fig_variables.update_layout(
             xaxis=dict(showgrid=False, zeroline=False, tickmode="linear", fixedrange=True),
             yaxis=dict(showgrid=False, zeroline=False, fixedrange=True),
@@ -219,7 +235,7 @@ def run_app():
         with right_column:
             solve_button = st.button("Solve LP model")
 
-        if st.session_state.lp_model_info is not None:
+        if st.session_state.lp_model_info is not None and st.session_state.lp_model_info[STATUS] == Status.OPTIMAL:
             st.markdown("---")
             st.subheader("Total time elapsed")
             st.markdown(f"**{round(st.session_state.lp_model_info[SOLUTION_TIME], 4)}** seconds")

@@ -60,7 +60,7 @@ def generate_dataset(number_of_employees):
         max_number_of_defects = int(units_processed * PERCENTAGE_OF_ALLOWED_DEFECTS)    # Round down number
         number_of_defects = random.randint(0, max_number_of_defects)
         
-        leave_days = random.sample(range(1, 32), random.randint(0, 5))
+        leave_days = random.sample(range(1, 32), random.randint(0, 5))  # Randomly select a number of days to be on leave
         total_labor_hours = get_business_days(leave_days) * 8
 
         efficiency_factor = random.uniform(EFFICIENCY_FACTOR_MIN, EFFICIENCY_FACTOR_MAX)

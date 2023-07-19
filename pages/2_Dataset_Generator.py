@@ -6,12 +6,11 @@ from packages.utils.utils import load_session_state, hide_streamlit_style
 PATTERN = r'[0-9\s]'  # Pattern to check if the dataset name contains spaces or numbers
 
 def run_app():
-    
     # Main content
     with st.container():
-        if st.session_state.datasets:
-            # Datasets exist
+        if st.session_state.datasets:      # Datasets exist
             st.header("Available Datasets")
+
             st.markdown("##")
 
             st.session_state.disabled = True
