@@ -1,7 +1,6 @@
 import streamlit as st
 from packages.utils.utils import load_session_state, hide_streamlit_style
 import plotly.express as px
-import pandas as pd
 import numpy as np
 from packages.gamification.leaderboards import create_unordered_empty_leaderboard, finalize_leaderboard
 
@@ -10,6 +9,7 @@ from packages.gamification.leaderboards import create_unordered_empty_leaderboar
 # OBJECTIVE = 1
 VARIABLES = 2
 # CONSTRAINTS = 3
+# SOLUTION TIME = 4
 
 
 # Leaderboards
@@ -59,7 +59,7 @@ def display_as_bar_chart(df):
 
 
 def build_productivity_df(points_per_star):
-    number_of_players = len(st.session_state.datasets[st.session_state.selected_dataset][0])
+    number_of_players = st.session_state.number_of_employees
     tasks = [task_name for task_name in st.session_state.datasets.keys()]
     df = create_unordered_empty_leaderboard(number_of_players, tasks)
 
@@ -72,7 +72,7 @@ def build_productivity_df(points_per_star):
                              if value > 0]
 
         # Sort the list by the processing time
-        task_workers_info.sort(key=lambda x: dataset["unit_processing_time"][x])
+        task_workers_info.sort(key=lambda x: st.session_state.lp_dataframe.loc[task_name][x])
 
         # Distribute the points to the players
         for i in range(len(task_workers_info)):
@@ -81,16 +81,14 @@ def build_productivity_df(points_per_star):
             df.loc[task_workers_info[i], task_name] = points
             df.loc[task_workers_info[i], "Total Points"] += points
 
-    
-
     return df
 
 
 def build_qualitative_df(min_qualitative_value, max_qualitative_value):
     # Randomly generate the qualitative values for each employee
-    number_of_players = len(st.session_state.datasets[st.session_state.selected_dataset][0])
+    number_of_players = st.session_state.number_of_employees
 
-    qualitative_factors = ["Self-assessment", "Engagement"]
+    qualitative_factors = ["Self vs Supervisor assess.", "Engagement"]
 
     df = create_unordered_empty_leaderboard(number_of_players, qualitative_factors)
 
@@ -104,7 +102,7 @@ def build_qualitative_df(min_qualitative_value, max_qualitative_value):
 
 def build_combined_df(productivity_df, qualitative_df, productivity_weight, qualitative_weight):
     # Calculate the combined leaderboard
-    number_of_players = len(st.session_state.datasets[st.session_state.selected_dataset][0])
+    number_of_players = st.session_state.number_of_employees
 
     leaderboards = [PRODUCTIVITY, QUALITATIVE]
 
@@ -150,7 +148,7 @@ def run_app():
                     weight_column, points_column = st.columns(2)
 
                     with weight_column:
-                        st.write("Weight: " + str(int(st.session_state.qualitative_weight * 100)) + "%")
+                        st.write("Weight: " + str(int(st.session_state.productivity_weight * 100)) + "%")
 
                     with points_column:
                         st.write("Points per Star: " + str(st.session_state.points_per_star))

@@ -75,6 +75,7 @@ def run_app():
                 st.error("Dataset name cannot contain spaces or numbers.")
                 return
             dataset = generate_dataset(number_of_employees)
+            st.session_state.number_of_employees = number_of_employees
             st.session_state.datasets[dataset_name] = (dataset, capacity, task_difficulty)
             st.session_state.selected_dataset = dataset_name  # Update the selected dataset
             st.session_state.lp_changed = True

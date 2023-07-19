@@ -209,7 +209,7 @@ def run_app():
                 maximum qualitative values to determine the range of values to distribute to each employee.
 
                 This leaderboard is meant to represent the qualitative aspects of the employees,
-                such as their attitude, punctuality, etc. The qualitative aspects chosen for now were "Self-assessment" which
+                such as their attitude, punctuality, etc. The qualitative aspects chosen for now were "Self vs Supervisor assessment" which
                 represents how well the employee thinks he did versus how well he actually did (the lower the difference, the better),
                 and "Engagement" which represents how engaged the employee was during the task (the higher the better).
 

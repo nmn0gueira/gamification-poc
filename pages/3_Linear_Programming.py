@@ -16,26 +16,21 @@ STATUS = 0
 OBJECTIVE = 1
 VARIABLES = 2
 CONSTRAINTS = 3
+SOLUTION_TIME = 4
 
 
 def build_dataframe():
-    number_of_employees = len(st.session_state.datasets[st.session_state.selected_dataset][0]) # Each employee is a row in the dataset
+    number_of_employees = st.session_state.number_of_employees
 
     df = pd.DataFrame(columns=["Person " + str(i+1) for i in range(number_of_employees)] + ["Capacity"])
     df.index.name = "Task"
-
-    average_performance_per_task = 0
 
     # Create complete dataframe with unit processing times
     # Load from datasets
     for task_name, (dataset, capacity, _) in st.session_state.datasets.items():
         unit_processing_times = dataset['unit_processing_time'].values
         df.loc[task_name] = np.append(unit_processing_times, capacity)
-        average_performance_per_task += unit_processing_times.mean()
 
-    average_performance_per_task /= len(st.session_state.datasets)
-                
-    st.session_state.average_performance_per_task = average_performance_per_task
     st.session_state.lp_dataframe = df
     st.session_state.lp_model_info = None
 
@@ -78,7 +73,7 @@ def get_model_info(lp_model):
 
     st.session_state.total_time = int(hours_worked)
 
-    return lp_model.status, lp_model.objective, variables, constraints
+    return lp_model.status, lp_model.objective, variables, constraints, lp_model.solutionTime
 
 
 
@@ -224,10 +219,10 @@ def run_app():
         with right_column:
             solve_button = st.button("Solve LP model")
 
-        if st.session_state.lp_dataframe is not None:
+        if st.session_state.lp_model_info is not None:
             st.markdown("---")
-            st.subheader("Average Performance per Task")
-            st.markdown(f"**{round(st.session_state.average_performance_per_task,4)}** hours per task")
+            st.subheader("Total time elapsed")
+            st.markdown(f"**{round(st.session_state.lp_model_info[SOLUTION_TIME], 4)}** seconds")
 
         if build_button:
             if len(st.session_state.datasets) == 0: # If there are no datasets, warn the user

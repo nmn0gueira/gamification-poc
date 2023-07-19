@@ -25,11 +25,25 @@ def finalize_leaderboard(df):
 
     df.reset_index(drop=True, inplace=True)  # Reset the index
 
+    ordinal_suffixes = generate_ordinal_suffixes(len(df.index))  # Generate the ordinal suffixes
+
     # Convert the index to Ordinal type with the defined suffixes
     df.index = (df.index + 1).to_series().astype(CategoricalDtype(ordered=True)).map(
-        lambda x: f"{x}{ORDINAL_SUFFIXES[x - 1]}")
+        lambda x: f"{x}{ordinal_suffixes[x - 1]}")
     
     # Rename the index to Placement
     df.index.name = "Placement"
     
     return df
+
+
+def get_ordinal_suffix(number):
+    if 10 <= number % 100 <= 20:
+        suffix = 'th'
+    else:
+        suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(number % 10, 'th')
+    return suffix
+
+def generate_ordinal_suffixes(count):
+    ordinal_suffixes = [get_ordinal_suffix(i) for i in range(1, count + 1)]
+    return ordinal_suffixes
