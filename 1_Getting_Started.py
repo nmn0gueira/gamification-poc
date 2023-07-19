@@ -152,7 +152,8 @@ def run_app():
 
         st.write(
             """
-            This component allows you to create leaderboards with automatic point assignment based on how well the employees performed their tasks.
+            This component allows you to create leaderboards with automatic point assignment based
+            on how well the employees performed their tasks and how well their qualitative aspects were rated.
             """
         )
 
@@ -217,9 +218,6 @@ def run_app():
                 """
             )
         
-
-
-
 
 
     # ---- ABOUT ----
