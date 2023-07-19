@@ -1,9 +1,6 @@
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 
-# Ordinal suffixes
-ORDINAL_SUFFIXES = ['st', 'nd', 'rd'] + ['th'] * 17 + ['st', 'nd', 'rd'] + ['th'] * 7 + ['st']
-
 def create_unordered_empty_leaderboard(number_of_players, columns):
     placements = [i for i in range(number_of_players)]
     df = pd.DataFrame(index=placements, columns=["Player"] + columns + ["Total Points"])
