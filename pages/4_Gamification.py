@@ -72,20 +72,31 @@ def build_productivity_df(points_per_star):
     tasks = [task_name for task_name in st.session_state.datasets.keys()]
     df = create_unordered_empty_leaderboard(number_of_players, tasks)
 
-    for task_name, (dataset, _, task_difficulty) in st.session_state.datasets.items():
-        max_points = points_per_star * task_difficulty
+    
+    for index, row in st.session_state.lp_dataframe.iterrows():
+        task_name = index
+        task_difficulty = row["Difficulty"]
+
+        points_to_distribute = points_per_star * task_difficulty
 
         # The calculated formula gives the most points to the faster employees who worked on the task (regardless of
         # the number of tasks executed) List with only the employees that worked on this task
         task_workers_info = [index for index, value in enumerate(st.session_state.lp_model_info[VARIABLES][task_name])
                              if value > 0]
 
-        # Sort the list by the processing time
-        task_workers_info.sort(key=lambda x: st.session_state.lp_dataframe.loc[task_name][x])
+        # Sort the list by the processing time by descending order (the slower employees will be at the top)
+        task_workers_info.sort(key=lambda x: st.session_state.lp_dataframe.loc[task_name][x], reverse=True)
+
+        # Get the number of employees that worked on this task
+        number_of_task_workers = len(task_workers_info)
+
+        # x + 2x + 3x + ... + nx = points_to_distribute (solve for x)
+        sum_of_components = number_of_task_workers * (number_of_task_workers + 1) // 2
+        x = points_to_distribute / sum_of_components    
 
         # Distribute the points to the players
         for i in range(len(task_workers_info)):
-            points = int(max_points / (i + 1))  # The points are distributed in a decreasing fashion
+            points = round(x * (i + 1))  # The points are distributed on a linear scale
             # Since the index starts from 0, we need to add 1 to the index to get the correct row
             df.loc[task_workers_info[i], task_name] = points
             df.loc[task_workers_info[i], "Total Points"] += points
@@ -220,7 +231,7 @@ def run_app():
 
         st.subheader("Productivity", help="The productivity leaderboard is based on the points earned for each task")
 
-        points_per_star = st.number_input("Points per Star", min_value=1, value=10
+        points_per_star = st.number_input("Points per Star", min_value=1, value=100
                                           , help="The points to distribute per star for each task")
 
         st.subheader("Qualitative",

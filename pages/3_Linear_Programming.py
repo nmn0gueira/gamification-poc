@@ -25,14 +25,14 @@ def build_dataframe():
     """
     number_of_employees = st.session_state.number_of_employees
 
-    df = pd.DataFrame(columns=["Employee " + str(i) for i in range(number_of_employees)] + ["Capacity"])
+    df = pd.DataFrame(columns=["Employee " + str(i) for i in range(number_of_employees)] + ["Capacity"] + ["Difficulty"])
     df.index.name = "Task"
 
     # Create complete dataframe with unit processing times
     # Load from datasets
-    for task_name, (dataset, capacity, _) in st.session_state.datasets.items():
+    for task_name, (dataset, capacity, difficulty) in st.session_state.datasets.items():
         unit_processing_times = dataset['unit_processing_time'].values
-        df.loc[task_name] = np.append(unit_processing_times, capacity)
+        df.loc[task_name] = np.append(unit_processing_times, [capacity, difficulty])
 
     st.session_state.lp_dataframe = df
     st.session_state.lp_model_info = None

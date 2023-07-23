@@ -5,7 +5,7 @@ from packages.utils.utils import load_session_state, hide_streamlit_style
 
 DATASET = 0
 CAPACITY = 1
-TASK_DIFFICULTY = 2
+DIFFICULTY = 2
 
 PATTERN = r'[0-9\s]'  # Pattern to check if the dataset name contains spaces or numbers
 
@@ -36,7 +36,7 @@ def run_app():
             with right_column:
                 st.subheader("Dataset Settings")
                 st.markdown(f"**Capacity:** {st.session_state.datasets[st.session_state.selected_dataset][CAPACITY]} hours")
-                st.markdown(f"**Task Difficulty:** {':star:'* st.session_state.datasets[st.session_state.selected_dataset][TASK_DIFFICULTY]}")
+                st.markdown(f"**Difficulty:** {':star:'* st.session_state.datasets[st.session_state.selected_dataset][DIFFICULTY]}")
 
             st.markdown("##")
 
@@ -65,7 +65,7 @@ def run_app():
 
         dataset_name = st.text_input("Dataset Name", "printing")  # User-defined dataset name
 
-        task_difficulty = st.slider("Task Difficulty", min_value=1, max_value=10, value=5, step=1)
+        difficulty = st.slider("Difficulty", min_value=1, max_value=10, value=5, step=1)
 
         generate_button = st.button("Generate Dataset", use_container_width=True)
 
@@ -85,7 +85,7 @@ def run_app():
             else:
                 dataset = generate_dataset(number_of_employees)
                 st.session_state.number_of_employees = number_of_employees
-                st.session_state.datasets[dataset_name] = (dataset, capacity, task_difficulty)
+                st.session_state.datasets[dataset_name] = (dataset, capacity, difficulty)
                 st.session_state.selected_dataset = dataset_name  # Update the selected dataset
                 st.session_state.lp_changed = True
                 st.experimental_rerun()  # Rerun the app to update the dataset selectbox

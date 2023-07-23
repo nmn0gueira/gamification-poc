@@ -21,7 +21,7 @@ def solve_linear_programming(dataframe, min_hours_worked, max_hours_worked):
     """
 
     variables = {task_name : [] for task_name in dataframe.index} # Create a dictionary of lists to store the variables
-    number_of_employees = len(dataframe.columns) - 1
+    number_of_employees = len(dataframe.columns) - 2
 
     # Create model
     model = LpProblem("Maximize_Production", LpMaximize)
