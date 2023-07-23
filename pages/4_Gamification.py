@@ -71,7 +71,6 @@ def build_productivity_df(points_per_star):
     number_of_players = st.session_state.number_of_employees
     tasks = [task_name for task_name in st.session_state.datasets.keys()]
     df = create_unordered_empty_leaderboard(number_of_players, tasks)
-
     
     for index, row in st.session_state.lp_dataframe.iterrows():
         task_name = index

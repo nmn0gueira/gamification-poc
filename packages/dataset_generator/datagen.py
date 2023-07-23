@@ -71,7 +71,6 @@ def generate_dataset(number_of_employees):
 
         # quality_factor = (units_processed - number_of_defects) / units_processed
 
-
         unit_processing_time = get_unit_processing_time(units_processed, number_of_defects, total_labor_hours, efficiency_factor)
 
         # productivity = get_productivity(units_processed, number_of_defects, total_labor_hours, efficiency_factor)
