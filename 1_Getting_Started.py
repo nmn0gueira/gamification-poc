@@ -54,7 +54,7 @@ def run_app():
         with left_column:
             st.write(
                 """
-                On the sidebar, you will find input elements to configure the dataset generation process:
+                In the sidebar, you will find input elements to configure the dataset generation process:
                 - "Number of Employees": The desired number of employees for the dataset. The minimum allowed value is 5.
                 - "Capacity (hrs)": The desired capacity for the dataset. Represents the total number of hours available for the task.
                 - "Dataset Name": Name for your dataset. Since each dataset is meant represents a task, it is recommended to use the name of the task as the dataset name.

@@ -15,7 +15,7 @@ VARIABLES = 2
 # Leaderboards
 PRODUCTIVITY = "Productivity"
 QUALITATIVE = "Qualitative"
-COMBINED = "Combined"
+GLOBAL = "Global"
 
 
 # Colors
@@ -124,17 +124,16 @@ def build_qualitative_df(min_qualitative_value, max_qualitative_value):
     return df
 
 
-def build_combined_df(productivity_df, qualitative_df, productivity_weight, qualitative_weight):
+def build_global_df(productivity_df, qualitative_df, productivity_weight, qualitative_weight):
     """
-    Builds the combined leaderboard dataframe
+    Builds the global leaderboard dataframe
     :param productivity_df: The productivity leaderboard dataframe
     :param qualitative_df: The qualitative leaderboard dataframe
     :param productivity_weight: The productivity weight
     :param qualitative_weight: The qualitative weight
-    :return: The combined leaderboard dataframe
+    :return: The global leaderboard dataframe
     """
 
-    # Calculate the combined leaderboard
     number_of_players = st.session_state.number_of_employees
 
     leaderboards = [PRODUCTIVITY, QUALITATIVE]
@@ -153,7 +152,7 @@ def run_app():
     with st.container():
         if st.session_state.leaderboards is not None:
             with st.container():
-                st.header("Final Leaderboard")
+                st.header("Global Leaderboard")
 
                 table_column, chart_column = st.columns((1.25, 1), gap="large")
 
@@ -161,11 +160,11 @@ def run_app():
                     st.markdown("##")   # Add some space to align the table with the chart
                     st.markdown("##")
                     # Display the dataframe as a table
-                    st.dataframe(st.session_state.leaderboards[COMBINED], use_container_width=True)
+                    st.dataframe(st.session_state.leaderboards[GLOBAL], use_container_width=True)
 
                 with chart_column:
                     # Display the dataframe as a bar chart
-                    display_as_bar_chart(st.session_state.leaderboards[COMBINED])
+                    display_as_bar_chart(st.session_state.leaderboards[GLOBAL])
 
                 st.markdown("---")
 
@@ -215,8 +214,8 @@ def run_app():
     with st.sidebar:
         st.header("Gamification")
 
-        st.subheader("Final",
-                     help="The final leaderboard is based on the weighted average of the productivity and qualitative values")
+        st.subheader("Global",
+                     help="The global leaderboard is based on the weighted average of the productivity and qualitative values")
         
         left_column, right_column = st.columns(2)
 
@@ -230,8 +229,8 @@ def run_app():
 
         st.subheader("Productivity", help="The productivity leaderboard is based on the points earned for each task")
 
-        points_per_star = st.number_input("Points per Star", min_value=1, value=100
-                                          , help="The points to distribute per star for each task")
+        points_per_star = st.number_input("Points per star", min_value=1, value=100
+                                          , help="The points to distribute per star of difficulty for each task")
 
         st.subheader("Qualitative",
                      help="The qualitative leaderboard is randomly generated for each employee based on the minimum and maximum values")
@@ -246,7 +245,7 @@ def run_app():
                                                     value=100, step=1)
 
 
-        leaderboards_button = st.button("Create Leaderboards", use_container_width=True)
+        leaderboards_button = st.button("Create leaderboards", use_container_width=True)
 
         if leaderboards_button:
 
@@ -260,7 +259,7 @@ def run_app():
 
                 qualitative_df = build_qualitative_df(min_qualitative_value, max_qualitative_value)
 
-                combined_df = build_combined_df(productivity_df, qualitative_df, productivity_weight,
+                global_df = build_global_df(productivity_df, qualitative_df, productivity_weight,
                                                 qualitative_weight)
                 
                 st.session_state.points_per_star = points_per_star
@@ -274,7 +273,7 @@ def run_app():
                 st.session_state.qualitative_weight = qualitative_weight
 
                 st.session_state.leaderboards = {PRODUCTIVITY: finalize_leaderboard(productivity_df), QUALITATIVE: finalize_leaderboard(qualitative_df),
-                                                 COMBINED: finalize_leaderboard(combined_df)}
+                                                 GLOBAL: finalize_leaderboard(global_df)}
 
                 st.experimental_rerun()
 

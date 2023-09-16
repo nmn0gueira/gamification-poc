@@ -139,7 +139,6 @@ def display_model():
             
         else:
             variables_df = pd.DataFrame(variables[option], columns=["Pieces Processed"])
-            variables_df.index += 1    # Add 1 to the index to start at 1 instead of 0
             variables_df.index.name = "Employee ID"
 
             fig_variables = px.bar(
@@ -231,7 +230,7 @@ def run_app():
                         st.warning("No Solution Found")
 
         else:
-            st.info("Linear programming dataframe not built. Make sure you have generated dataset to build the dataframe first")
+            st.info("Linear programming dataframe not built. Make sure you have generated dataset(s) to build the dataframe first.")
 
     # Sidebar content
     with st.sidebar:

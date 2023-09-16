@@ -58,24 +58,24 @@ def run_app():
             # Used so that the page remembers the number of employees if datasets were generated before
             default_value = st.session_state.number_of_employees if st.session_state.datasets else 5 
 
-            number_of_employees = st.number_input("Number of Employees", min_value=5, value=default_value, disabled=st.session_state.disabled)
+            number_of_employees = st.number_input("Number of employees", min_value=5, value=default_value, disabled=st.session_state.disabled)
         
         with right_column:
             capacity = st.number_input("Capacity (hrs)", min_value=1, value=600)
 
-        dataset_name = st.text_input("Dataset Name", "printing")  # User-defined dataset name
+        dataset_name = st.text_input("Dataset name", "printing")  # User-defined dataset name
 
         difficulty = st.slider("Difficulty", min_value=1, max_value=10, value=5, step=1)
 
-        generate_button = st.button("Generate Dataset", use_container_width=True)
+        generate_button = st.button("Generate dataset", use_container_width=True)
 
         left_column, right_column = st.columns(2)
         
         with left_column:
-            delete_selected_button = st.button("Delete Selected", use_container_width=True)
+            delete_selected_button = st.button("Delete selected", use_container_width=True)
 
         with right_column:
-            delete_all_button = st.button("Delete All", use_container_width=True)
+            delete_all_button = st.button("Delete all", use_container_width=True)
 
 
         if generate_button:  # Handle the click event of the "Generate Dataset" button
